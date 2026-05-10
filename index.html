@@ -300,7 +300,7 @@ const fctx=fc.getContext('2d');
 fc.width=innerWidth;fc.height=innerHeight;
 window.addEventListener('resize',()=>{fc.width=innerWidth;fc.height=innerHeight;});
 
-const fireParticles=[];
+let fireParticles=[];
 let curX=innerWidth/2,curY=innerHeight/2;
 let targetX=curX,targetY=curY;
 
@@ -374,8 +374,9 @@ class EmberParticle{
   }
 }
 
-let activeFireParticles=[];
 let isMouseInDoc=true;
+document.addEventListener('mouseenter',()=>isMouseInDoc=true);
+document.addEventListener('mouseleave',()=>isMouseInDoc=false);
 
 function animateFire(){
   requestAnimationFrame(animateFire);
@@ -383,27 +384,39 @@ function animateFire(){
   curY+=(targetY-curY)*0.15;
   fctx.clearRect(0,0,fc.width,fc.height);
   if(isMouseInDoc){
-    for(let i=0;i<5;i++) activeFireParticles.push(new FireParticle(curX,curY));
-    if(Math.random()<0.3) activeFireParticles.push(new EmberParticle(curX,curY));
+    for(let i=0;i<5;i++) fireParticles.push(new FireParticle(curX,curY));
+    if(Math.random()<0.3) fireParticles.push(new EmberParticle(curX,curY));
   }
-  for(let i=activeFireParticles.length-1;i>=0;i--){
-    activeFireParticles[i].update();
-    activeFireParticles[i].draw(fctx);
-    if(activeFireParticles[i].life<=0) activeFireParticles.splice(i,1);
-  }
+  fireParticles=fireParticles.filter(p=>p.life>0);
+  fireParticles.forEach(p=>{p.update();p.draw(fctx);});
 }
 animateFire();
-document.addEventListener('mouseenter',()=>isMouseInDoc=true);
-document.addEventListener('mouseleave',()=>isMouseInDoc=false);
 
 /* ─── LOADING ─── */
 const logs=['Establishing secure tunnel... OK','Loading clan registry... 20 entries','Igniting neural fire grid... ACTIVE','Anti-spam protocols... ENGAGED','Connecting to node grid... SYNCED','System ready. Welcome, operator.'];
 let li=0;
 function addLog(){
-  if(li>=logs.length){setTimeout(()=>{const l=document.getElementById('loading');l.style.opacity='0';l.style.transition='opacity 0.5s';setTimeout(()=>{l.style.display='none';document.getElementById('app').style.display='block';renderClans();renderLeaderboard();},500);},400);return;}
-  const d=document.createElement('div');d.className='load-log';d.style.animationDelay='0s';
+  if(li>=logs.length){
+    setTimeout(()=>{
+      const l=document.getElementById('loading');
+      l.style.opacity='0';
+      l.style.transition='opacity 0.5s';
+      setTimeout(()=>{
+        l.style.display='none';
+        document.getElementById('app').style.display='block';
+        renderClans();
+        renderLeaderboard();
+      },500);
+    },400);
+    return;
+  }
+  const d=document.createElement('div');
+  d.className='load-log';
+  d.style.animationDelay='0s';
   d.innerHTML='<span style="color:rgba(255,26,26,0.4)">> </span>'+logs[li];
-  document.getElementById('load-logs').appendChild(d);li++;setTimeout(addLog,380);
+  document.getElementById('load-logs').appendChild(d);
+  li++;
+  setTimeout(addLog,380);
 }
 setTimeout(addLog,800);
 
@@ -432,7 +445,6 @@ function renderClans(){
   document.getElementById('lead-clan-votes').textContent=leader.votes;
   
   const allSorted=[...clans].sort((a,b)=>b.votes-a.votes);
-  
   document.getElementById('clans-grid').innerHTML=filtered.map(c=>{
     const rank=allSorted.findIndex(x=>x.id===c.id)+1;
     const rc=rank===1?'top1':rank<=3?'top3':rank<=5?'top5':'';
@@ -457,13 +469,6 @@ function renderClans(){
       <div class="vote-bar"><div class="vote-fill" style="width:${pct}%"></div></div>
     </div>`;
   }).join('');
-  
-  filtered.forEach(c=>{
-    if(voted[c.id]){
-      const rem=Math.max(0,30000-(Date.now()-voted[c.id].ts));
-      if(rem>100){setTimeout(()=>renderClans(),rem+200);}
-    }
-  });
 }
 
 function tiltCard(el,e){const r=el.getBoundingClientRect();const cx=r.left+r.width/2,cy=r.top+r.height/2;const dx=(e.clientX-cx)/r.width*16,dy=(e.clientY-cy)/r.height*16;el.style.transform=`perspective(600px) rotateX(${-dy}deg) rotateY(${dx}deg) translateY(-2px)`;}
@@ -471,15 +476,15 @@ function resetTilt(el){el.style.transform='translateY(-2px)';}
 function setSort(m){sortMode=m;document.getElementById('sort-votes').classList.toggle('active',m==='votes');document.getElementById('sort-alpha').classList.toggle('active',m==='alpha');renderClans();}
 
 function castVote(id){
-  if(voted[id]&&Date.now()-voted[id].ts<30000) return;
+  if(voted[id]&&Date.now()-voted[id].ts<30000){showToast('VOTE COOLDOWN ACTIVE');return;}
   const c=clans.find(x=>x.id===id);if(!c)return;
   c.votes++;voted[id]={ts:Date.now()};
   saveClans();saveVoted();
   showToast('⬡ VOTE CAST → '+c.name);
-  renderClans();
+  renderClans();renderLeaderboard();
   const card=document.getElementById('card-'+id);
   if(card){card.style.boxShadow='0 0 60px rgba(255,26,26,0.5)';setTimeout(()=>{card.style.boxShadow='';},900);}
-  for(let i=0;i<20;i++) activeFireParticles.push(new FireParticle(targetX,targetY));
+  for(let i=0;i<20;i++) fireParticles.push(new FireParticle(targetX,targetY));
 }
 
 function showToast(msg){
@@ -505,7 +510,7 @@ function renderLeaderboard(){
       <td><span style="font-family:'Orbitron',monospace;font-weight:700">${c.name}</span></td>
       <td><span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(255,60,30,0.4)">[${c.tag}]</span></td>
       <td class="lb-votes">${c.votes}</td>
-      <td><div style="display:flex;align-items:center;gap:8px;">${pct}% <div style="flex:1;height:2px;background:rgba(255,26,26,0.1);"><div style="height:100%;background:var(--red);width:${pct}%"></div></div></div></td>
+      <td>${pct}%</td>
     </tr>`;
   }).join('');
 }
