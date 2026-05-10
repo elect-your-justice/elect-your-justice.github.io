@@ -217,8 +217,26 @@ const CLANS=[
 
 let clans=JSON.parse(localStorage.getItem('eyj2-clans')||JSON.stringify(CLANS));
 let voted=JSON.parse(localStorage.getItem('eyj2-voted')||'{}');
+let userIP = 'SIMULATED_IP_' + Math.random(); // Placeholder for IP check
 let sortMode='votes';
 let onlineCount=247;
+let lastRequestTime = 0;
+
+// Rate limit constant (3 seconds between any system-critical action)
+const GLOBAL_RATE_LIMIT = 3000; 
+
+// IP-based unique voting check
+async function getIP() {
+    try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        userIP = data.ip;
+        console.log("System Node IP Identified:", userIP);
+    } catch (e) {
+        console.warn("Using local signature for identification.");
+    }
+}
+getIP();
 
 function saveClans(){localStorage.setItem('eyj2-clans',JSON.stringify(clans));}
 function saveVoted(){localStorage.setItem('eyj2-voted',JSON.stringify(voted));}
@@ -450,8 +468,12 @@ function renderClans(){
     const rc=rank===1?'top1':rank<=3?'top3':rank<=5?'top5':'';
     const rl=rank===1?'▲ #1 LEADER':rank===2?'▲ #2':rank===3?'▲ #3':'#'+rank;
     const pct=Math.round(c.votes/maxV*100);
-    const canVote=!voted[c.id]||(Date.now()-voted[c.id].ts>30000);
-    const timeLeft=voted[c.id]?Math.max(0,30-Math.floor((Date.now()-voted[c.id].ts)/1000)):0;
+    
+    // Check voting state for this IP/System
+    const voterKey = userIP + '_' + c.id;
+    const hasVoted = voted[voterKey];
+    const canVote = !hasVoted || (Date.now() - hasVoted.ts > 30000);
+    const timeLeft = hasVoted ? Math.max(0, 30 - Math.floor((Date.now() - hasVoted.ts) / 1000)) : 0;
     
     return `<div class="clan-card" id="card-${c.id}" onmousemove="tiltCard(this,event)" onmouseleave="resetTilt(this)">
       <div class="clan-rank ${rc}">${rl}</div>
@@ -464,7 +486,7 @@ function renderClans(){
         <div><div class="vote-count" id="vc-${c.id}">${c.votes}</div><span class="vote-label">VOTES</span></div>
         ${canVote
           ?`<button class="vote-btn" onclick="castVote(${c.id})"><span>⬡ VOTE</span></button>`
-          :`<div><div class="voted-label">VOTED (${timeLeft}s)</div><div class="cooldown-bar"><div class="cooldown-fill" id="cd-${c.id}" style="width:${Math.round(timeLeft/30*100)}%;transition:width ${timeLeft}s linear"></div></div></div>`}
+          :`<div><div class="voted-label">LOCKED (${timeLeft}s)</div><div class="cooldown-bar"><div class="cooldown-fill" id="cd-${c.id}" style="width:${Math.round(timeLeft/30*100)}%;transition:width ${timeLeft}s linear"></div></div></div>`}
       </div>
       <div class="vote-bar"><div class="vote-fill" style="width:${pct}%"></div></div>
     </div>`;
@@ -476,12 +498,36 @@ function resetTilt(el){el.style.transform='translateY(-2px)';}
 function setSort(m){sortMode=m;document.getElementById('sort-votes').classList.toggle('active',m==='votes');document.getElementById('sort-alpha').classList.toggle('active',m==='alpha');renderClans();}
 
 function castVote(id){
-  if(voted[id]&&Date.now()-voted[id].ts<30000){showToast('VOTE COOLDOWN ACTIVE');return;}
-  const c=clans.find(x=>x.id===id);if(!c)return;
-  c.votes++;voted[id]={ts:Date.now()};
-  saveClans();saveVoted();
-  showToast('⬡ VOTE CAST → '+c.name);
-  renderClans();renderLeaderboard();
+  const now = Date.now();
+  
+  // 1. Global Rate Limit (Anti-Spam)
+  if(now - lastRequestTime < GLOBAL_RATE_LIMIT) {
+    showToast('!! RATE LIMIT EXCEEDED !!');
+    return;
+  }
+  
+  // 2. IP-based unique voting check
+  const voterKey = userIP + '_' + id;
+  if(voted[voterKey] && now - voted[voterKey].ts < 30000){
+    showToast('IP VOTE COOLDOWN ACTIVE');
+    return;
+  }
+
+  const c=clans.find(x=>x.id===id);
+  if(!c)return;
+
+  // Execute Vote
+  lastRequestTime = now;
+  c.votes++;
+  voted[voterKey] = {ts: now};
+  
+  saveClans();
+  saveVoted();
+  
+  showToast('⬡ VOTE RECORDED BY ' + userIP);
+  renderClans();
+  renderLeaderboard();
+
   const card=document.getElementById('card-'+id);
   if(card){card.style.boxShadow='0 0 60px rgba(255,26,26,0.5)';setTimeout(()=>{card.style.boxShadow='';},900);}
   for(let i=0;i<20;i++) fireParticles.push(new FireParticle(targetX,targetY));
