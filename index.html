@@ -1,3 +1,9 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elect Your Justice - Neural Fire</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
 *{margin:0;padding:0;box-sizing:border-box;}
@@ -116,6 +122,8 @@ nav{position:sticky;top:0;z-index:100;background:rgba(5,5,5,0.92);border-bottom:
 
 @media(max-width:600px){.stats-row{grid-template-columns:1fr 1fr;}.nav-links{gap:4px;}.nav-btn{padding:4px 8px;font-size:11px;}.hero-title{font-size:22px;}}
 </style>
+</head>
+<body>
 
 <canvas id="bg"></canvas>
 <canvas id="fire-canvas"></canvas>
@@ -191,7 +199,13 @@ nav{position:sticky;top:0;z-index:100;background:rgba(5,5,5,0.92);border-bottom:
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// --- SUPABASE CONFIGURATION ---
+const supabaseUrl = 'https://mjwkndckwobgpieyfgbi.supabase.co';
+const supabaseKey = 'sb_publishable_UyU-X4YMB11Id89NSJZN7w_cMwbSQ-i'; // Publishable is safe to expose
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
 const CLANS=[
   {id:1,name:"RΞЛ",tag:"RΞЛ",votes:48,desc:"Strongest hacker clan to ever exist. Most members are 15-16, Indian and Chinese Amercians. Very active in everything, never lost a single match with full 6 members. Sold over $50,000 worth of hacks. Most influence over the cheaters of war robots, able to cut off the lifeline of all the hackers at once. India Based."},
   {id:2,name:"Misfits",tag:"MF",votes:25,desc:"Elite P2W based in US who are actually not retarded, average age 20-40. They are known for being 100% honest to the Losers called Wick. US based."},
@@ -208,24 +222,50 @@ const CLANS=[
   {id:13,name:"DD",tag:"DD",votes:19,desc:"A clan who plays but never wins or rarely win. No one really cares about them. US based."},
   {id:14,name:"Team.PHL",tag:"PHL",votes:5,desc:"A clan that in based in the Philipines, they have couple good Philipino American members, and since oneof the members is a content creator they are somewhat famous and somewhat strong. Based in Philipines."},
   {id:15,name:"All hacker clan except ren",tag:"IYI & Wrath",votes:0,desc:"Nice history, most not active anymore. Europe based."},
-  {id:16,name:"All Russian Clans",tag:"RU & 999 etc",votes:0,desc:9Usedto be good, now useless. Russia Based."},
+  {id:16,name:"All Russian Clans",tag:"RU & 999 etc",votes:0,desc:"Used to be good, now useless. Russia Based."},
   {id:17,name:"ITA",tag:"ITA",votes:1,desc:"Useless clan that plays a lot and loses. Based in Italy."},
   {id:18,name:"STF",tag:"STF",votes:5,desc:"Hack users, very close ties with Tanker Warning. Based in EU."},
   {id:19,name:"GANG",tag:"GANG",votes:5,desc:"Nice friends, Nice people. Not very active. US bases."},
   {id:20,name:"UCH & FALLS",tag:"UCH & FALLS",votes:2,desc:"Falls Members use hacks. Both clans arent that strong, if Falls stops cheating they will be as bad as an Average Mexican clan. Based in Mexico."}
 ];
 
-let clans=JSON.parse(localStorage.getItem('eyj2-clans')||JSON.stringify(CLANS));
-let voted=JSON.parse(localStorage.getItem('eyj2-voted')||'{}');
+let clans = [...CLANS];
+let voted = JSON.parse(localStorage.getItem('eyj2-voted')||'{}');
 let userIP = 'SIMULATED_IP_' + Math.random(); // Placeholder for IP check
-let sortMode='votes';
-let onlineCount=247;
+let sortMode = 'votes';
+let onlineCount = 247;
 let lastRequestTime = 0;
-
-// Rate limit constant (3 seconds between any system-critical action)
 const GLOBAL_RATE_LIMIT = 3000; 
 
-// IP-based unique voting check
+// Retrieve votes from Supabase on load
+async function fetchDatabaseVotes() {
+  const { data, error } = await supabase.from('clans').select('id, votes');
+  if (data) {
+    data.forEach(dbClan => {
+      const localClan = clans.find(c => c.id === dbClan.id);
+      if (localClan) localClan.votes = dbClan.votes;
+    });
+    renderClans();
+    renderLeaderboard();
+  } else if (error) {
+    console.error("Failed to load initial Supabase data:", error);
+  }
+}
+
+// Subscribe to real-time updates from Supabase
+supabase
+  .channel('public:clans')
+  .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'clans' }, payload => {
+    const updatedClan = payload.new;
+    const clanIndex = clans.findIndex(c => c.id === updatedClan.id);
+    if (clanIndex !== -1) {
+      clans[clanIndex].votes = updatedClan.votes;
+      renderClans();
+      renderLeaderboard();
+    }
+  })
+  .subscribe();
+
 async function getIP() {
     try {
         const response = await fetch('https://api.ipify.org?format=json');
@@ -238,7 +278,6 @@ async function getIP() {
 }
 getIP();
 
-function saveClans(){localStorage.setItem('eyj2-clans',JSON.stringify(clans));}
 function saveVoted(){localStorage.setItem('eyj2-voted',JSON.stringify(voted));}
 
 /* ─── THREE.JS HEAVY NEURAL NETWORK ─── */
@@ -411,7 +450,7 @@ function animateFire(){
 animateFire();
 
 /* ─── LOADING ─── */
-const logs=['Establishing secure tunnel... OK','Loading clan registry... 20 entries','Igniting neural fire grid... ACTIVE','Anti-spam protocols... ENGAGED','Connecting to node grid... SYNCED','System ready. Welcome, operator.'];
+const logs=['Establishing secure tunnel... OK','Loading clan registry... 20 entries','Igniting neural fire grid... ACTIVE','Connecting to Supabase... SYNCED','Anti-spam protocols... ENGAGED','System ready. Welcome, operator.'];
 let li=0;
 function addLog(){
   if(li>=logs.length){
@@ -422,8 +461,7 @@ function addLog(){
       setTimeout(()=>{
         l.style.display='none';
         document.getElementById('app').style.display='block';
-        renderClans();
-        renderLeaderboard();
+        fetchDatabaseVotes(); // Kick off DB load as the screen opens
       },500);
     },400);
     return;
@@ -497,7 +535,7 @@ function tiltCard(el,e){const r=el.getBoundingClientRect();const cx=r.left+r.wid
 function resetTilt(el){el.style.transform='translateY(-2px)';}
 function setSort(m){sortMode=m;document.getElementById('sort-votes').classList.toggle('active',m==='votes');document.getElementById('sort-alpha').classList.toggle('active',m==='alpha');renderClans();}
 
-function castVote(id){
+async function castVote(id){
   const now = Date.now();
   
   // 1. Global Rate Limit (Anti-Spam)
@@ -516,17 +554,31 @@ function castVote(id){
   const c=clans.find(x=>x.id===id);
   if(!c)return;
 
-  // Execute Vote
+  // Optimistic UI Update
   lastRequestTime = now;
   c.votes++;
   voted[voterKey] = {ts: now};
-  
-  saveClans();
   saveVoted();
   
   showToast('⬡ VOTE RECORDED BY ' + userIP);
   renderClans();
   renderLeaderboard();
+
+  // Send to Supabase Database
+  const { error } = await supabase
+    .from('clans')
+    .update({ votes: c.votes })
+    .eq('id', id);
+
+  if (error) {
+     console.error("Database sync failed:", error);
+     showToast('!! DB SYNC ERROR !!');
+     // Revert vote on failure
+     c.votes--;
+     renderClans();
+     renderLeaderboard();
+     return;
+  }
 
   const card=document.getElementById('card-'+id);
   if(card){card.style.boxShadow='0 0 60px rgba(255,26,26,0.5)';setTimeout(()=>{card.style.boxShadow='';},900);}
@@ -561,3 +613,5 @@ function renderLeaderboard(){
   }).join('');
 }
 </script>
+</body>
+</html>
