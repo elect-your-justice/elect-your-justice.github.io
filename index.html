@@ -55,7 +55,6 @@ body{
 @keyframes pulse-ring{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(255,50,0,.5)}50%{opacity:.7;box-shadow:0 0 0 5px transparent}}
 @keyframes slide-in{from{transform:translateX(110%);opacity:0}to{transform:none;opacity:1}}
 
-/* ── NAV ── */
 nav{
   position:sticky;top:0;z-index:100;
   background:rgba(5,5,5,.94);border-bottom:1px solid rgba(255,26,26,.18);
@@ -135,6 +134,7 @@ nav{
 }
 .sort-btn:hover,.sort-btn.active{border-color:var(--red);color:var(--red);background:rgba(255,26,26,.1);}
 
+/* ── SECTION TITLE ── */
 .section-title{
   font-family:'Orbitron',monospace;font-size:10px;letter-spacing:5px;
   color:rgba(255,60,30,.5);text-transform:uppercase;
@@ -142,6 +142,7 @@ nav{
 }
 .section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(255,26,26,.3),transparent);}
 
+/* ── CLAN GRID ── */
 .clans-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;}
 @media(max-width:400px){.clans-grid{grid-template-columns:1fr;}}
 
@@ -261,6 +262,7 @@ nav{
   <small>ATTEMPTING RECONNECT...</small>
 </div>
 
+<!-- LOADING SCREEN -->
 <div id="loading">
   <div style="position:relative;text-align:center;">
     <div class="scan-line"></div>
@@ -271,6 +273,7 @@ nav{
   <div class="load-logs" id="load-logs"></div>
 </div>
 
+<!-- MAIN APP -->
 <div id="app" style="display:none;">
   <nav>
     <div class="nav-logo">⬡ E·Y·J</div>
@@ -284,6 +287,7 @@ nav{
     </div>
   </nav>
 
+  <!-- VOTE PAGE -->
   <div id="page-vote" class="page active">
     <div id="hero">
       <div style="position:relative;display:inline-block;max-width:100%;">
@@ -354,12 +358,12 @@ const CLAN_META = [
   {id:2,  flag:"🇺🇸", name:"Misfits",                        tag:"MF",         votes:1534, desc:"Elite P2W based in US, average age 20-40. They are known for being 100% honest — especially to the squad called Wick. US based."},
   {id:3,  flag:"🇺🇸", name:"Wick",                           tag:"WICK",       votes:939,  desc:"People compare them to MF but they are not even close. Wick tried to be the \"mature\" ones but they almost never win. Punisher thinks he is tough, lol. US based."},
   {id:4,  flag:"🇺🇸", name:"Berzerker",                      tag:"BERZ",       votes:300,  desc:"A clan led by a YouTuber whose channel survives on giveaways. Almost never wins. Vote for this if you're chasing a freebie. US based."},
-  {id:5,  flag:"🌎",  name:"HEAT & NEXT & Latin Clans",      tag:"LATAM",      votes:489,   desc:"Grouped them all. NEXT is only known because of JunkMale farming views off hacker content. HEAT is useless. Other Latin clans? Also not doing much. Mexico based."},
-  {id:6,  flag:"🇺🇸", name:"Overdrive",                      tag:"OVD",        votes:960,    desc:"A retired iOS members clan that recently tried to make a comeback. Huge egos, little to show. US based."},
+  {id:5,  flag:"🌎",  name:"HEAT & NEXT & Latin Clans",      tag:"LATAM",      votes:489,  desc:"Grouped them all. NEXT is only known because of JunkMale farming views off hacker content. HEAT is useless. Other Latin clans? Also not doing much. Mexico based."},
+  {id:6,  flag:"🇺🇸", name:"Overdrive",                      tag:"OVD",        votes:960,  desc:"A retired iOS members clan that recently tried to make a comeback. Huge egos, little to show. US based."},
   {id:7,  flag:"🇺🇸", name:"Zen Warriors",                   tag:"ZΞЛ",        votes:830,  desc:"Thought they were the peacekeepers. RΞЛ made them go extinct. US based."},
   {id:8,  flag:"🇷🇺", name:"Iron Stars",                     tag:"☆",          votes:1357, desc:"Have an insane history, currently one of the strongest clans on the board. Russia based."},
-  {id:9,  flag:"🇨🇳", name:"All Chinese Clans",              tag:"CN-ALL",     votes:1485,  desc:"Most probably won't see this. There used to be hacker clans like Habibi and Nebula etc. Now most don't play or are very weak. China Based."},
-  {id:10, flag:"🇲🇽", name:"Legion",                         tag:"INTI",       votes:697,   desc:"Best Latin America clan, the strongest in the region. Mexico Based."},
+  {id:9,  flag:"🇨🇳", name:"All Chinese Clans",              tag:"CN-ALL",     votes:1485, desc:"Most probably won't see this. There used to be hacker clans like Habibi and Nebula etc. Now most don't play or are very weak. China Based."},
+  {id:10, flag:"🇲🇽", name:"Legion",                         tag:"INTI",       votes:697,  desc:"Best Latin America clan, the strongest in the region. Mexico Based."},
   {id:11, flag:"🇺🇸", name:"Universal Pro",                  tag:"UN",         votes:868,  desc:"A clan that was decent for a stretch but luck ran out. Now a weak shell — most members left and the leader is an odd character. US based."},
   {id:12, flag:"🇬🇧", name:"HOWl",                           tag:"HOWL",       votes:135,  desc:"The leader is a kid from UK who loves abusing what little power he has. Threatened prime RΞЛ and got raided 19 times — most raids pulling over 1k pings. UK based."},
   {id:13, flag:"🇺🇸", name:"DD",                             tag:"DD",         votes:190,  desc:"A clan that plays but rarely wins. Nobody is losing sleep over them. US based."},
@@ -368,7 +372,7 @@ const CLAN_META = [
   {id:16, flag:"🇷🇺", name:"All Russian Clans",              tag:"RU/999",     votes:905,  desc:"Used to be formidable. Now largely inactive and outclassed. Russia Based."},
   {id:17, flag:"🇮🇹", name:"ITA",                            tag:"ITA",        votes:107,  desc:"Plays a lot and loses a lot. Italy based."},
   {id:18, flag:"🇪🇺", name:"STF",                            tag:"STF",        votes:590,  desc:"Hack users with close ties to Tanker Warning. EU based."},
-  {id:19, flag:"🇺🇸", name:"GANG",                           tag:"GANG",       votes:597,    desc:"Good friends, nice people. Not very active. US based."},
+  {id:19, flag:"🇺🇸", name:"GANG",                           tag:"GANG",       votes:597,  desc:"Good friends, nice people. Not very active. US based."},
   {id:20, flag:"🇲🇽", name:"UCH & FALLS",                    tag:"UCH/FALLS",  votes:289,  desc:"Falls members use hacks. Neither clan is particularly strong — if Falls dropped the cheats they'd be average at best. Mexico based."},
 ];
 
@@ -698,6 +702,7 @@ function setSort(m) {
   document.getElementById('sort-a')?.classList.toggle('active', m==='alpha');
   renderClans();
 }
+
 async function castVote(id, btn) {
   const now = Date.now();
   const lv = lastVoteTime[id] || 0;
@@ -743,6 +748,7 @@ async function castVote(id, btn) {
     }, 2000);
   }
 }
+
 function renderLeaderboard() {
   const sorted = [...clans].sort((a,b) => b.votes - a.votes);
   const total = clans.reduce((s,c) => s+c.votes, 0);
@@ -776,7 +782,6 @@ function updateLeaderboardRow(id) {
   const fEl = document.getElementById('lbf-' + id); if (fEl) fEl.style.width = pct + '%';
   updateStats();
 }
-
 function toast(msg) {
   const wrap = document.getElementById('toast');
   if (!wrap) return;
@@ -796,7 +801,6 @@ function showPage(name, btn) {
   if (name === 'leaderboard') renderLeaderboard();
 }
 
-
 function tickOnline() {
   onlineCount = Math.max(180, Math.min(420, onlineCount + (Math.random()<.5?1:-1)*Math.floor(Math.random()*4)));
   const el = document.getElementById('online-count');
@@ -806,7 +810,6 @@ function tickOnline() {
 }
 onlineCount = 230 + Math.floor(Math.random() * 80);
 setInterval(tickOnline, 3000);
-
 
 const LOGS = [
   'Establishing encrypted tunnel... OK',
@@ -844,6 +847,7 @@ function nextLog() {
   logIdx++;
   setTimeout(nextLog, 370);
 }
+
 document.addEventListener('DOMContentLoaded', () => {
   initBackground();
   initFire();
