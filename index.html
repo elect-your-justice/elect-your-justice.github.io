@@ -2,616 +2,924 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Elect Your Justice - Neural Fire</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Elect Your Justice</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap');
-*{margin:0;padding:0;box-sizing:border-box;}
+
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 :root{
-  --red:#ff1a1a;--red2:#ff4400;--red3:#ff6600;--dark:#050505;
+  --red:#ff1a1a;--red2:#ff4400;--red3:#ff6600;
   --card-bg:rgba(255,26,26,0.04);--card-border:rgba(255,26,26,0.18);
-  --glow-red:0 0 20px rgba(255,26,26,0.5);--glow-red2:0 0 40px rgba(255,68,0,0.3);
+  --glow:0 0 20px rgba(255,26,26,0.5);
 }
-body{background:#050505;color:#fff;font-family:'Rajdhani',sans-serif;overflow-x:hidden;cursor:crosshair;}
-canvas#bg{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
-canvas#fire-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none;}
-#app{position:relative;z-index:2;min-height:100vh;}
+html{scroll-behavior:smooth;}
+body{
+  background:#050505;color:#fff;
+  font-family:'Rajdhani',sans-serif;
+  overflow-x:hidden;cursor:crosshair;
+  -webkit-font-smoothing:antialiased;
+}
 
-#loading{position:fixed;inset:0;background:#050505;z-index:1000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;}
-.load-logo{font-family:'Orbitron',monospace;font-size:clamp(20px,4vw,36px);font-weight:900;color:var(--red);text-shadow:var(--glow-red);letter-spacing:8px;animation:glitch 2s infinite;}
-.load-sub{font-family:'Share Tech Mono',monospace;color:rgba(255,26,26,0.6);font-size:13px;letter-spacing:3px;}
-.load-bar-wrap{width:300px;height:2px;background:rgba(255,26,26,0.1);border:1px solid rgba(255,26,26,0.2);}
-.load-bar{height:100%;background:linear-gradient(90deg,#ff4400,#ff1a1a);width:0%;animation:loadbar 2.5s ease forwards;}
-.load-logs{font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(255,26,26,0.5);text-align:left;width:300px;}
-.load-log{opacity:0;animation:fadein 0.4s forwards;}
-@keyframes loadbar{0%{width:0%}60%{width:70%}100%{width:100%}}
+/* ── CANVASES ── */
+#bg-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+#fire-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;}
+
+/* ── APP SHELL ── */
+#app{position:relative;z-index:2;min-height:100vh;display:flex;flex-direction:column;}
+
+/* ── LOADING ── */
+#loading{
+  position:fixed;inset:0;background:#050505;z-index:9999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+  transition:opacity .5s;
+}
+.load-logo{
+  font-family:'Orbitron',monospace;font-weight:900;
+  font-size:clamp(16px,3.5vw,32px);color:var(--red);
+  letter-spacing:6px;text-shadow:var(--glow);
+  animation:glitch 2.5s infinite;
+}
+.load-sub{font-family:'Share Tech Mono',monospace;color:rgba(255,26,26,.55);font-size:11px;letter-spacing:3px;}
+.load-bar-wrap{width:min(300px,80vw);height:2px;background:rgba(255,26,26,.1);border:1px solid rgba(255,26,26,.2);}
+.load-bar{height:100%;background:linear-gradient(90deg,#ff4400,#ff1a1a);width:0;animation:loadbar 2.8s ease forwards;}
+.load-logs{font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(255,26,26,.45);width:min(300px,80vw);}
+.load-log{opacity:0;animation:fadein .35s forwards;line-height:1.8;}
+
+@keyframes loadbar{0%{width:0}55%{width:65%}100%{width:100%}}
 @keyframes fadein{to{opacity:1}}
-@keyframes glitch{0%,88%,100%{transform:none;text-shadow:var(--glow-red)}89%{transform:skewX(-12deg) translateX(4px);text-shadow:-3px 0 #ff6600,3px 0 #ff1a1a}91%{transform:none}}
-@keyframes scanline{0%{top:-20px}100%{top:110%}}
-@keyframes flicker{0%,100%{opacity:1}50%{opacity:0.85}}
+@keyframes glitch{
+  0%,86%,100%{transform:none;text-shadow:var(--glow)}
+  87%{transform:skewX(-10deg) translateX(3px);text-shadow:-2px 0 #ff6600,2px 0 #ff1a1a}
+  89%{transform:none}
+}
+@keyframes scanline{0%{top:-4px}100%{top:105%}}
+@keyframes flicker{0%,100%{opacity:1}48%{opacity:.9}50%{opacity:.82}52%{opacity:.9}}
+@keyframes pulse-ring{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(255,50,0,.5)}50%{opacity:.7;box-shadow:0 0 0 5px transparent}}
+@keyframes slide-in{from{transform:translateX(110%);opacity:0}to{transform:none;opacity:1}}
 
-nav{position:sticky;top:0;z-index:100;background:rgba(5,5,5,0.92);border-bottom:1px solid rgba(255,26,26,0.2);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:space-between;padding:12px 24px;}
-.nav-logo{font-family:'Orbitron',monospace;font-size:15px;font-weight:900;color:var(--red);letter-spacing:3px;text-shadow:0 0 12px rgba(255,26,26,0.6);}
-.nav-links{display:flex;gap:8px;}
-.nav-btn{background:transparent;border:1px solid rgba(255,26,26,0.25);color:rgba(255,80,80,0.8);font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;letter-spacing:2px;padding:6px 14px;cursor:crosshair;transition:all 0.2s;text-transform:uppercase;}
-.nav-btn:hover,.nav-btn.active{background:rgba(255,26,26,0.08);border-color:var(--red);color:var(--red);box-shadow:0 0 12px rgba(255,26,26,0.25);}
-.online-badge{font-family:'Share Tech Mono',monospace;font-size:11px;color:#ff6644;display:flex;align-items:center;gap:6px;}
-.pulse-dot{width:6px;height:6px;border-radius:50%;background:#ff3300;animation:rpulse 1.5s infinite;}
-@keyframes rpulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(255,50,0,0.5)}50%{opacity:0.7;box-shadow:0 0 0 6px transparent}}
+/* ── NAV ── */
+nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(5,5,5,.94);border-bottom:1px solid rgba(255,26,26,.18);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 20px;gap:12px;
+}
+.nav-logo{font-family:'Orbitron',monospace;font-size:13px;font-weight:900;color:var(--red);letter-spacing:3px;text-shadow:0 0 10px rgba(255,26,26,.5);white-space:nowrap;}
+.nav-links{display:flex;gap:6px;flex-shrink:0;}
+.nav-btn{
+  background:transparent;border:1px solid rgba(255,26,26,.22);
+  color:rgba(255,80,80,.8);font-family:'Rajdhani',sans-serif;
+  font-size:12px;font-weight:600;letter-spacing:2px;
+  padding:6px 12px;cursor:crosshair;transition:all .2s;text-transform:uppercase;
+  -webkit-appearance:none;border-radius:0;
+}
+.nav-btn:hover,.nav-btn.active{background:rgba(255,26,26,.08);border-color:var(--red);color:var(--red);box-shadow:0 0 10px rgba(255,26,26,.2);}
+.online-badge{font-family:'Share Tech Mono',monospace;font-size:10px;color:#ff6644;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;}
+.pulse-dot{width:5px;height:5px;border-radius:50%;background:#ff3300;animation:pulse-ring 1.5s infinite;flex-shrink:0;}
 
-.page{display:none;padding:24px;max-width:1200px;margin:0 auto;}
+/* ── PAGES ── */
+.page{display:none;flex:1;}
 .page.active{display:block;}
 
-#hero{text-align:center;padding:60px 24px 40px;position:relative;}
-.hero-title{font-family:'Orbitron',monospace;font-size:clamp(22px,4.5vw,58px);font-weight:900;line-height:1;letter-spacing:4px;color:var(--red);text-shadow:0 0 40px rgba(255,26,26,0.7),0 0 80px rgba(255,26,26,0.3);animation:flicker 4s infinite;}
-.hero-title span{color:#ff8866;display:block;font-size:0.45em;letter-spacing:10px;margin-top:10px;text-shadow:0 0 20px rgba(255,100,50,0.5);}
-.hero-sub{font-family:'Share Tech Mono',monospace;font-size:13px;color:rgba(255,80,40,0.7);letter-spacing:3px;margin:20px 0 40px;}
-.hero-btn{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;letter-spacing:4px;padding:16px 48px;background:transparent;border:2px solid var(--red);color:var(--red);cursor:crosshair;position:relative;overflow:hidden;transition:all 0.3s;text-transform:uppercase;}
-.hero-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#ff1a1a,#ff4400);transform:translateX(-101%);transition:transform 0.3s;}
+/* ── HERO ── */
+#hero{text-align:center;padding:clamp(30px,6vw,60px) 20px clamp(24px,4vw,40px);position:relative;}
+.scan-line{position:absolute;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--red),transparent);animation:scanline 5s linear infinite;opacity:.2;pointer-events:none;}
+.hero-title{
+  font-family:'Orbitron',monospace;font-weight:900;line-height:1.1;
+  font-size:clamp(20px,4.5vw,54px);letter-spacing:3px;
+  color:var(--red);text-shadow:0 0 40px rgba(255,26,26,.65),0 0 80px rgba(255,26,26,.2);
+  animation:flicker 5s infinite;
+}
+.hero-title small{
+  display:block;font-size:.42em;letter-spacing:8px;
+  color:#ff8866;margin-top:10px;
+  text-shadow:0 0 16px rgba(255,100,50,.45);
+}
+.hero-sub{font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(255,80,40,.65);letter-spacing:3px;margin:18px 0 32px;}
+.hero-btn{
+  font-family:'Orbitron',monospace;font-size:12px;font-weight:700;
+  letter-spacing:4px;padding:14px 40px;
+  background:transparent;border:2px solid var(--red);color:var(--red);
+  cursor:crosshair;position:relative;overflow:hidden;transition:all .3s;
+  text-transform:uppercase;-webkit-appearance:none;border-radius:0;display:inline-block;
+}
+.hero-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#ff1a1a,#ff4400);transform:translateX(-101%);transition:transform .3s;}
 .hero-btn:hover::before{transform:translateX(0);}
-.hero-btn:hover{color:#050505;box-shadow:0 0 50px rgba(255,26,26,0.6);}
-.hero-btn span{position:relative;z-index:1;}
-.scan-line{position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--red),transparent);animation:scanline 5s linear infinite;opacity:0.25;pointer-events:none;}
+.hero-btn:hover{color:#050505;box-shadow:0 0 40px rgba(255,26,26,.55);}
+.hero-btn-inner{position:relative;z-index:1;}
 
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0;}
-.stat-card{background:var(--card-bg);border:1px solid var(--card-border);padding:16px;text-align:center;position:relative;overflow:hidden;}
+/* ── MAIN CONTENT ── */
+.content-wrap{max-width:1200px;margin:0 auto;padding:0 16px 48px;width:100%;}
+
+/* ── STATS ROW ── */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:20px 0;}
+@media(max-width:540px){.stats-row{grid-template-columns:1fr 1fr;gap:8px;}}
+.stat-card{
+  background:var(--card-bg);border:1px solid var(--card-border);
+  padding:14px 10px;text-align:center;position:relative;overflow:hidden;
+}
 .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--red),transparent);}
-.stat-num{font-family:'Orbitron',monospace;font-size:26px;font-weight:900;color:var(--red);text-shadow:var(--glow-red);}
-.stat-label{font-size:11px;letter-spacing:3px;color:rgba(255,100,60,0.5);text-transform:uppercase;margin-top:4px;font-family:'Share Tech Mono',monospace;}
+.stat-num{font-family:'Orbitron',monospace;font-size:clamp(18px,3vw,24px);font-weight:900;color:var(--red);text-shadow:var(--glow);}
+.stat-label{font-size:9px;letter-spacing:2px;color:rgba(255,100,60,.5);text-transform:uppercase;margin-top:4px;font-family:'Share Tech Mono',monospace;}
 
-.search-bar{display:flex;gap:8px;margin:20px 0;align-items:center;}
-.search-input{flex:1;background:rgba(255,26,26,0.03);border:1px solid var(--card-border);color:#fff;font-family:'Share Tech Mono',monospace;font-size:13px;padding:10px 16px;outline:none;transition:border-color 0.2s;}
-.search-input::placeholder{color:rgba(255,80,40,0.4);}
-.search-input:focus{border-color:var(--red);box-shadow:0 0 12px rgba(255,26,26,0.12);}
-.sort-btn{background:rgba(255,26,26,0.04);border:1px solid var(--card-border);color:rgba(255,80,40,0.7);font-family:'Share Tech Mono',monospace;font-size:11px;padding:10px 14px;cursor:crosshair;transition:all 0.2s;letter-spacing:1px;}
-.sort-btn:hover,.sort-btn.active{border-color:var(--red);color:var(--red);background:rgba(255,26,26,0.1);}
+/* ── SEARCH ── */
+.search-bar{display:flex;gap:6px;margin:18px 0;align-items:center;flex-wrap:wrap;}
+.search-input{
+  flex:1;min-width:120px;
+  background:rgba(255,26,26,.03);border:1px solid var(--card-border);
+  color:#fff;font-family:'Share Tech Mono',monospace;font-size:12px;
+  padding:9px 14px;outline:none;transition:border-color .2s;
+  -webkit-appearance:none;border-radius:0;
+}
+.search-input::placeholder{color:rgba(255,80,40,.35);}
+.search-input:focus{border-color:var(--red);box-shadow:0 0 8px rgba(255,26,26,.1);}
+.sort-btn{
+  background:rgba(255,26,26,.04);border:1px solid var(--card-border);
+  color:rgba(255,80,40,.65);font-family:'Share Tech Mono',monospace;
+  font-size:10px;padding:9px 11px;cursor:crosshair;transition:all .2s;
+  letter-spacing:1px;white-space:nowrap;-webkit-appearance:none;border-radius:0;
+}
+.sort-btn:hover,.sort-btn.active{border-color:var(--red);color:var(--red);background:rgba(255,26,26,.1);}
 
-.clans-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;}
-.clan-card{background:var(--card-bg);border:1px solid var(--card-border);padding:20px;position:relative;overflow:hidden;transition:all 0.3s;cursor:crosshair;transform-style:preserve-3d;}
-.clan-card:hover{border-color:rgba(255,26,26,0.5);box-shadow:0 0 35px rgba(255,26,26,0.12),inset 0 0 30px rgba(255,26,26,0.03);transform:translateY(-2px);}
-.clan-card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,26,26,0.04),transparent,rgba(255,68,0,0.02));pointer-events:none;}
-.clan-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,26,26,0.4),transparent);opacity:0;transition:opacity 0.3s;}
-.clan-card:hover::before{opacity:1;}
-.clan-rank{font-family:'Orbitron',monospace;font-size:11px;color:rgba(255,60,30,0.5);letter-spacing:2px;margin-bottom:12px;}
-.clan-rank.top1{color:#ffd700;text-shadow:0 0 10px rgba(255,215,0,0.6);}
-.clan-rank.top3{color:#ff6600;text-shadow:0 0 8px rgba(255,102,0,0.5);}
-.clan-rank.top5{color:var(--red);text-shadow:var(--glow-red);}
-.clan-header{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
-.clan-logo{width:48px;height:48px;background:linear-gradient(135deg,rgba(255,26,26,0.12),rgba(255,68,0,0.05));border:1px solid rgba(255,26,26,0.25);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:14px;font-weight:900;color:var(--red);flex-shrink:0;}
-.clan-name{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;color:#ff8866;letter-spacing:2px;}
-.clan-tag{font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(255,80,40,0.45);letter-spacing:2px;margin-top:2px;}
-.clan-desc{font-size:13px;color:rgba(255,160,120,0.5);line-height:1.5;margin-bottom:16px;font-family:'Rajdhani',sans-serif;}
-.vote-row{display:flex;align-items:center;gap:12px;}
-.vote-count{font-family:'Orbitron',monospace;font-size:22px;font-weight:900;color:var(--red);text-shadow:var(--glow-red);flex:1;}
-.vote-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(255,60,30,0.45);display:block;letter-spacing:1px;}
-.vote-btn{font-family:'Orbitron',monospace;font-size:11px;font-weight:700;letter-spacing:2px;padding:10px 20px;background:transparent;border:1px solid rgba(255,26,26,0.5);color:var(--red);cursor:crosshair;transition:all 0.25s;position:relative;overflow:hidden;}
-.vote-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#ff1a1a,#ff4400);transform:scaleX(0);transform-origin:left;transition:transform 0.25s;}
-.vote-btn:hover::before{transform:scaleX(1);}
-.vote-btn:hover{color:#050505;box-shadow:0 0 20px rgba(255,26,26,0.4);}
-.vote-btn span{position:relative;z-index:1;}
-.vote-bar{height:2px;background:rgba(255,26,26,0.08);margin-top:12px;overflow:hidden;}
-.vote-fill{height:100%;background:linear-gradient(90deg,#ff4400,#ff1a1a);transition:width 0.8s cubic-bezier(0.4,0,0.2,1);}
-.voted-label{font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(255,42,42,0.6);letter-spacing:1px;}
-.cooldown-bar{height:1px;background:rgba(255,42,42,0.15);margin-top:4px;overflow:hidden;}
-.cooldown-fill{height:100%;background:var(--red);}
+/* ── SECTION TITLE ── */
+.section-title{
+  font-family:'Orbitron',monospace;font-size:10px;letter-spacing:5px;
+  color:rgba(255,60,30,.5);text-transform:uppercase;
+  margin-bottom:16px;display:flex;align-items:center;gap:10px;
+}
+.section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(255,26,26,.3),transparent);}
 
-#toast{position:fixed;top:80px;right:24px;z-index:999;display:flex;flex-direction:column;gap:8px;}
-.toast-item{background:rgba(255,26,26,0.08);border:1px solid var(--red);padding:12px 20px;font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--red);animation:slideIn 0.3s ease;box-shadow:var(--glow-red);}
-@keyframes slideIn{from{transform:translateX(120%);opacity:0}to{transform:none;opacity:1}}
+/* ── CLAN GRID ── */
+.clans-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;}
+@media(max-width:400px){.clans-grid{grid-template-columns:1fr;}}
 
-.lb-table{width:100%;border-collapse:collapse;}
-.lb-table th{font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:3px;color:rgba(255,60,30,0.5);text-align:left;padding:10px 16px;border-bottom:1px solid rgba(255,26,26,0.1);text-transform:uppercase;}
-.lb-table td{padding:12px 16px;border-bottom:1px solid rgba(255,26,26,0.06);font-family:'Rajdhani',sans-serif;font-size:15px;}
-.lb-rank-num{font-family:'Orbitron',monospace;font-size:14px;font-weight:700;width:50px;color:var(--red);}
-.lb-row{transition:background 0.2s;}
-.lb-row:hover{background:rgba(255,26,26,0.04);}
-.lb-row.rank-1 td{color:#ffd700;}
-.lb-row.rank-2 td{color:#ff8844;}
-.lb-row.rank-3 td{color:#ff5533;}
-.lb-votes{font-family:'Orbitron',monospace;font-size:16px;color:var(--red);}
+.clan-card{
+  background:var(--card-bg);border:1px solid var(--card-border);
+  padding:18px;position:relative;overflow:hidden;
+  transition:border-color .3s,box-shadow .3s,transform .15s;
+  cursor:crosshair;
+}
+.clan-card:hover{
+  border-color:rgba(255,26,26,.48);
+  box-shadow:0 0 28px rgba(255,26,26,.1),inset 0 0 20px rgba(255,26,26,.03);
+  transform:translateY(-2px);
+}
+.clan-card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,26,26,.03),transparent);pointer-events:none;}
 
-.section-title{font-family:'Orbitron',monospace;font-size:12px;letter-spacing:5px;color:rgba(255,60,30,0.55);text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;gap:12px;}
-.section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(255,26,26,0.35),transparent);}
+.clan-top-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.clan-rank{font-family:'Orbitron',monospace;font-size:10px;color:rgba(255,60,30,.45);letter-spacing:2px;}
+.clan-rank.r1{color:#ffd700;text-shadow:0 0 8px rgba(255,215,0,.55);}
+.clan-rank.r2{color:#e8a060;text-shadow:0 0 6px rgba(232,160,96,.4);}
+.clan-rank.r3{color:#cc4444;text-shadow:0 0 6px rgba(204,68,68,.4);}
+.clan-rank.r5{color:var(--red);text-shadow:var(--glow);}
+.clan-flag{font-size:20px;line-height:1;}
 
-.site-footer{text-align:center;padding:32px 24px;font-family:'Orbitron',monospace;font-size:13px;color:rgba(255,60,30,0.5);letter-spacing:3px;border-top:1px solid rgba(255,26,26,0.1);margin-top:40px;}
-.site-footer span{color:var(--red);text-shadow:var(--glow-red);font-size:15px;font-weight:700;}
+.clan-header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.clan-logo{
+  width:42px;height:42px;flex-shrink:0;
+  background:linear-gradient(135deg,rgba(255,26,26,.1),rgba(255,68,0,.04));
+  border:1px solid rgba(255,26,26,.22);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Orbitron',monospace;font-size:13px;font-weight:900;color:var(--red);
+}
+.clan-name{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:#ff8866;letter-spacing:1px;line-height:1.2;}
+.clan-tag{font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(255,80,40,.4);letter-spacing:2px;margin-top:3px;}
+.clan-desc{font-size:12px;color:rgba(255,150,100,.5);line-height:1.55;margin-bottom:14px;}
 
-::-webkit-scrollbar{width:3px;}
+.vote-row{display:flex;align-items:center;gap:10px;}
+.vote-left{flex:1;}
+.vote-count{font-family:'Orbitron',monospace;font-size:20px;font-weight:900;color:var(--red);text-shadow:var(--glow);}
+.vote-label{font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(255,60,30,.4);letter-spacing:1px;}
+.vote-btn{
+  font-family:'Orbitron',monospace;font-size:10px;font-weight:700;
+  letter-spacing:2px;padding:9px 16px;
+  background:transparent;border:1px solid rgba(255,26,26,.48);color:var(--red);
+  cursor:crosshair;transition:all .25s;position:relative;overflow:hidden;
+  white-space:nowrap;-webkit-appearance:none;border-radius:0;flex-shrink:0;
+}
+.vote-btn::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,#ff1a1a,#ff4400);transform:scaleX(0);transform-origin:left;transition:transform .25s;}
+.vote-btn:hover::before,.vote-btn:active::before{transform:scaleX(1);}
+.vote-btn:hover,.vote-btn:active{color:#050505;}
+.vote-btn-inner{position:relative;z-index:1;}
+.vote-btn:disabled{opacity:.35;cursor:not-allowed;}
+.voted-box{flex-shrink:0;}
+.voted-label{font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(255,42,42,.55);letter-spacing:1px;}
+.cd-bar{height:1px;background:rgba(255,42,42,.15);margin-top:3px;width:60px;overflow:hidden;}
+.cd-fill{height:100%;background:var(--red);}
+
+.vote-bar{height:2px;background:rgba(255,26,26,.07);margin-top:10px;overflow:hidden;}
+.vote-fill{height:100%;background:linear-gradient(90deg,#ff4400,#ff1a1a);transition:width .9s cubic-bezier(.4,0,.2,1);}
+
+/* ── TOAST ── */
+#toast{position:fixed;top:72px;right:16px;z-index:9990;display:flex;flex-direction:column;gap:6px;max-width:calc(100vw - 32px);}
+.toast-msg{
+  background:rgba(255,26,26,.08);border:1px solid var(--red);
+  padding:10px 16px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--red);
+  animation:slide-in .3s ease;box-shadow:var(--glow);
+  word-break:break-word;
+}
+
+/* ── LEADERBOARD ── */
+.lb-wrap{background:var(--card-bg);border:1px solid var(--card-border);overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.lb-table{width:100%;border-collapse:collapse;min-width:480px;}
+.lb-table th{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:3px;color:rgba(255,60,30,.5);text-align:left;padding:10px 14px;border-bottom:1px solid rgba(255,26,26,.1);text-transform:uppercase;white-space:nowrap;}
+.lb-table td{padding:10px 14px;border-bottom:1px solid rgba(255,26,26,.05);}
+.lb-row{transition:background .2s;}
+.lb-row:hover{background:rgba(255,26,26,.04);}
+.lb-row.r1 td{color:#ffd700;}
+.lb-row.r2 td{color:#e8a060;}
+.lb-row.r3 td{color:#cc4444;}
+.lb-rank{font-family:'Orbitron',monospace;font-size:13px;font-weight:700;color:var(--red);width:44px;}
+.lb-name{font-family:'Orbitron',monospace;font-size:12px;font-weight:700;}
+.lb-tag{font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(255,60,30,.4);white-space:nowrap;}
+.lb-votes{font-family:'Orbitron',monospace;font-size:14px;color:var(--red);white-space:nowrap;}
+.lb-bar-cell{min-width:100px;}
+.lb-bar{height:2px;background:rgba(255,26,26,.1);margin-top:3px;overflow:hidden;}
+.lb-fill{height:100%;background:linear-gradient(90deg,#ff4400,#ff1a1a);transition:width .9s;}
+
+/* ── STATUS INDICATOR ── */
+#db-status{font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:2px;padding:4px 10px;border:1px solid rgba(255,26,26,.2);color:rgba(255,60,30,.5);}
+#db-status.live{color:#44ff88;border-color:rgba(68,255,136,.3);}
+#db-status.err{color:var(--red);border-color:rgba(255,26,26,.4);}
+
+/* ── FOOTER ── */
+.site-footer{
+  text-align:center;padding:28px 20px;
+  font-family:'Orbitron',monospace;font-size:11px;
+  color:rgba(255,60,30,.45);letter-spacing:3px;
+  border-top:1px solid rgba(255,26,26,.1);margin-top:40px;
+}
+.site-footer strong{color:var(--red);text-shadow:var(--glow);font-size:13px;}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:3px;height:3px;}
 ::-webkit-scrollbar-track{background:#050505;}
-::-webkit-scrollbar-thumb{background:rgba(255,26,26,0.3);}
+::-webkit-scrollbar-thumb{background:rgba(255,26,26,.3);}
 
-@media(max-width:600px){.stats-row{grid-template-columns:1fr 1fr;}.nav-links{gap:4px;}.nav-btn{padding:4px 8px;font-size:11px;}.hero-title{font-size:22px;}}
+/* ── CONNECTION OVERLAY ── */
+#conn-msg{display:none;position:fixed;inset:0;background:rgba(5,5,5,.85);z-index:5000;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+#conn-msg.show{display:flex;}
+#conn-msg p{font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--red);letter-spacing:2px;}
+#conn-msg small{font-family:'Share Tech Mono',monospace;font-size:10px;color:rgba(255,80,40,.5);letter-spacing:1px;}
 </style>
 </head>
 <body>
 
-<canvas id="bg"></canvas>
+<canvas id="bg-canvas"></canvas>
 <canvas id="fire-canvas"></canvas>
 <div id="toast"></div>
 
+<!-- CONNECTION ERROR OVERLAY -->
+<div id="conn-msg">
+  <p>⚠ DATABASE CONNECTION LOST</p>
+  <small>ATTEMPTING RECONNECT...</small>
+</div>
+
+<!-- LOADING SCREEN -->
 <div id="loading">
-  <div style="position:relative;">
+  <div style="position:relative;text-align:center;">
     <div class="scan-line"></div>
     <div class="load-logo">ELECT-YOUR-JUSTICE</div>
   </div>
-  <div class="load-sub">NEURAL FIRE NETWORK v4.2 // IGNITING</div>
+  <div class="load-sub">NEURAL FIRE NETWORK v5.0 // IGNITING</div>
   <div class="load-bar-wrap"><div class="load-bar"></div></div>
   <div class="load-logs" id="load-logs"></div>
 </div>
 
+<!-- MAIN APP -->
 <div id="app" style="display:none;">
   <nav>
     <div class="nav-logo">⬡ E·Y·J</div>
     <div class="nav-links">
-      <button class="nav-btn active" onclick="showPage('vote',this)">VOTE</button>
-      <button class="nav-btn" onclick="showPage('leaderboard',this)">RANKS</button>
+      <button class="nav-btn active" id="btn-vote" onclick="showPage('vote',this)">VOTE</button>
+      <button class="nav-btn" id="btn-lb" onclick="showPage('leaderboard',this)">RANKS</button>
     </div>
-    <div class="online-badge"><span class="pulse-dot"></span><span id="online-count">247</span> ONLINE</div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div id="db-status">CONNECTING</div>
+      <div class="online-badge"><span class="pulse-dot"></span><span id="online-count">—</span></div>
+    </div>
   </nav>
 
+  <!-- VOTE PAGE -->
   <div id="page-vote" class="page active">
     <div id="hero">
-      <div style="position:relative;display:inline-block;">
+      <div style="position:relative;display:inline-block;max-width:100%;">
         <div class="scan-line"></div>
-        <div class="hero-title">ELECT YOUR JUSTICE<span>ALL WR CLAN ELECTION</span></div>
+        <div class="hero-title">ELECT YOUR JUSTICE<small>ALL WR CLAN ELECTION</small></div>
       </div>
       <div class="hero-sub">// SELECT YOUR CLAN // CAST YOUR VOTE // SHAPE THE NETWORK //</div>
-      <button class="hero-btn" onclick="document.getElementById('clans-section').scrollIntoView({behavior:'smooth'})"><span>⬡ ENTER SYSTEM</span></button>
+      <button class="hero-btn" onclick="document.getElementById('clans-anchor').scrollIntoView({behavior:'smooth'})">
+        <span class="hero-btn-inner">⬡ ENTER SYSTEM</span>
+      </button>
     </div>
 
-    <div style="max-width:1200px;margin:0 auto;padding:0 24px 40px;" id="clans-section">
+    <div class="content-wrap" id="clans-anchor">
       <div class="stats-row">
-        <div class="stat-card"><div class="stat-num" id="total-votes">0</div><div class="stat-label">TOTAL VOTES</div></div>
-        <div class="stat-card"><div class="stat-num">20</div><div class="stat-label">ACTIVE CLANS</div></div>
-        <div class="stat-card"><div class="stat-num" id="lead-clan-name" style="font-size:14px;letter-spacing:1px;">RΞЛ</div><div class="stat-label">LEADING CLAN</div></div>
-        <div class="stat-card"><div class="stat-num" id="lead-clan-votes">59</div><div class="stat-label">LEAD VOTES</div></div>
+        <div class="stat-card"><div class="stat-num" id="total-votes">—</div><div class="stat-label">TOTAL VOTES</div></div>
+        <div class="stat-card"><div class="stat-num" id="clan-count">20</div><div class="stat-label">ACTIVE CLANS</div></div>
+        <div class="stat-card"><div class="stat-num" id="lead-name" style="font-size:clamp(10px,2vw,14px);letter-spacing:1px;">—</div><div class="stat-label">LEADER</div></div>
+        <div class="stat-card"><div class="stat-num" id="lead-votes">—</div><div class="stat-label">LEAD VOTES</div></div>
       </div>
+
       <div class="search-bar">
-        <input class="search-input" type="text" placeholder="// SEARCH CLANS..." id="search-input" oninput="renderClans()">
-        <button class="sort-btn active" id="sort-votes" onclick="setSort('votes')">SORT: VOTES</button>
-        <button class="sort-btn" id="sort-alpha" onclick="setSort('alpha')">A-Z</button>
+        <input class="search-input" type="text" id="search" placeholder="// SEARCH CLANS..." oninput="renderClans()" autocomplete="off" autocorrect="off" spellcheck="false">
+        <button class="sort-btn active" id="sort-v" onclick="setSort('votes')">VOTES ↓</button>
+        <button class="sort-btn" id="sort-a" onclick="setSort('alpha')">A–Z</button>
       </div>
+
       <div class="section-title">CLAN REGISTRY</div>
-      <div class="clans-grid" id="clans-grid"></div>
+      <div class="clans-grid" id="clans-grid">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(255,60,30,.4);padding:20px 0;">LOADING CLAN DATA...</div>
+      </div>
     </div>
 
     <div class="site-footer">
-      SITE BY: <span>[RΞЛ]</span> &nbsp;&nbsp; BU̶ЯŇ ŤĦΞ ŴØЯŁĎ (Sam E. S. Cuditshme)
+      SITE BY: <strong>[RΞЛ]</strong> &nbsp; BU̶ЯŇ ŤĦΞ ŴØЯŁĎ &nbsp;(Sam E. S. Cuditshme)
     </div>
   </div>
 
+  <!-- LEADERBOARD PAGE -->
   <div id="page-leaderboard" class="page">
-    <div class="section-title" style="margin-bottom:24px;">LIVE LEADERBOARD</div>
-    <div class="stats-row">
-      <div class="stat-card"><div class="stat-num" id="lb-total">0</div><div class="stat-label">TOTAL VOTES</div></div>
-      <div class="stat-card"><div class="stat-num" id="lb-online">247</div><div class="stat-label">ONLINE NOW</div></div>
-      <div class="stat-card"><div class="stat-num" id="lb-leader" style="font-size:14px;">RΞЛ</div><div class="stat-label">CURRENT LEADER</div></div>
-      <div class="stat-card"><div class="stat-num" id="lb-margin">0</div><div class="stat-label">VOTE GAP</div></div>
+    <div class="content-wrap" style="padding-top:24px;">
+      <div class="section-title" style="margin-bottom:20px;">LIVE LEADERBOARD</div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-num" id="lb-total">—</div><div class="stat-label">TOTAL VOTES</div></div>
+        <div class="stat-card"><div class="stat-num" id="lb-online">—</div><div class="stat-label">ONLINE</div></div>
+        <div class="stat-card"><div class="stat-num" id="lb-leader" style="font-size:clamp(10px,2vw,14px);">—</div><div class="stat-label">LEADER</div></div>
+        <div class="stat-card"><div class="stat-num" id="lb-gap">—</div><div class="stat-label">VOTE GAP</div></div>
+      </div>
+      <div class="lb-wrap">
+        <table class="lb-table">
+          <thead><tr><th>RNK</th><th>CLAN</th><th>TAG</th><th>VOTES</th><th style="min-width:100px;">SHARE</th></tr></thead>
+          <tbody id="lb-body"><tr><td colspan="5" style="font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(255,60,30,.4);padding:20px 14px;">LOADING...</td></tr></tbody>
+        </table>
+      </div>
     </div>
-    <div style="background:var(--card-bg);border:1px solid var(--card-border);overflow:hidden;">
-      <table class="lb-table">
-        <thead><tr><th>RANK</th><th>CLAN</th><th>TAG</th><th>VOTES</th><th>SHARE</th></tr></thead>
-        <tbody id="lb-body"></tbody>
-      </table>
-    </div>
-    <div class="site-footer">SITE BY: <span>[RΞЛ]</span> &nbsp;&nbsp; BU̶ЯŇ ŤĦΞ ŴØЯŁĎ</div>
+    <div class="site-footer">SITE BY: <strong>[RΞЛ]</strong> &nbsp; BU̶ЯŇ ŤĦΞ ŴØЯŁĎ</div>
   </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
-// --- SUPABASE CONFIGURATION ---
-const supabaseUrl = 'https://mjwkndckwobgpieyfgbi.supabase.co';
-const supabaseKey = 'sb_publishable_UyU-X4YMB11Id89NSJZN7w_cMwbSQ-i'; // Publishable is safe to expose
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+/* ════════════════════════════════════════════════
+   SUPABASE CONFIG
+   ════════════════════════════════════════════════ */
+const SUPABASE_URL = 'https://mjwkndckwobgpieyfgbi.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_UyU-X4YMB11Id89NSJZN7w_cMwbSQ-i';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const CLANS=[
-  {id:1,name:"RΞЛ",tag:"RΞЛ",votes:1940,desc:"Strongest hacker clan to ever exist. Most members are 15-16, Indian and Chinese Amercians. Very active in everything, never lost a single match with full 6 members. Sold over $50,000 worth of hacks. Most influence over the cheaters of war robots, able to cut off the lifeline of all the hackers at once. India Based."},
-  {id:2,name:"Misfits",tag:"MF",votes:1034,desc:"Elite P2W based in US who are actually not retarded, average age 20-40. They are known for being 100% honest to the Losers called Wick. US based."},
-  {id:3,name:"Wick",tag:"Wick",votes:939,desc:"People compare them to MF but they are not even close, Wick tried to be the \"mature\" once but they almost never win, Punisher thinks he is tough, lol. US based"},
-  {id:4,name:"Berzerker",tag:"BERZ",votes:300,desc:"A clan that is lead by a YouTuber, Berzerker is a guy whos channel is only working by doing giveaways. Almost never wins, if you vote for this, you are probably a poor guy hoping t win a giveaway. US based."},
-  {id:5,name:"HEAT & NEXT and other latin dumb clans",tag:"all of them",votes:10,desc:"The Latin clans are the worse so I conbined them all, NEXT is just known because of JunkMale who farms views from hacker videos. HEAT is useless, Other Latin Clans trash too. Mexico based."},
-  {id:6,name:"Overdrive",tag:"Ovd",votes:3,desc:"A retired iOS members clan that just recently tried to make a comeback, huge egos, little things done. US based."},
-  {id:7,name:"Zen Warriors",tag:"ZΞЛ",votes:830,desc:"They think they are the piece keepers, the RΞЛs made them go extict. US based."},
-  {id:8,name:"Iron Stars",tag:"'☆'",votes:1357,desc:"Have an insane history, currectly one of the strongest clans. Russia based."},
-  {id:9,name:"All Chinese Clans.",tag:"All of them",votes:296,desc:"Most probably wont see this, there used to b hcker clans like habibi an nebula etc. Now most dont play orare very weak. China Based."},
-  {id:10,name:"Legion",tag:"INTI",votes:13,desc:"Best Latin America clan, the strongest latin America clan. Mexico Based"},
-  {id:11,name:"Universal Pro",tag:"UN",votes:868,desc:"A clan that used to be good because the got lucky but wha can you expect they are now a useless weak clan and most of their members left, leader is an odd person. US based.."},
-  {id:12,name:"HOWl",tag:"HOWL",votes:135,desc:"Worst Clan Ever bro like the leader is this weirdo kid from UK who likes abusing the little to no power that he has. Gosh so annoying even thinking about him is annoying, he threatned prime ren and got raided 19 times, most raids got over 1k pings. UK based."},
-  {id:13,name:"DD",tag:"DD",votes:190,desc:"A clan who plays but never wins or rarely win. No one really cares about them. US based."},
-  {id:14,name:"Team.PHL",tag:"PHL",votes:385,desc:"A clan that in based in the Philipines, they have couple good Philipino American members, and since oneof the members is a content creator they are somewhat famous and somewhat strong. Based in Philipines."},
-  {id:15,name:"All hacker clan except ren",tag:"IYI & Wrath",votes:275,desc:"Nice history, most not active anymore. Europe based."},
-  {id:16,name:"All Russian Clans",tag:"RU & 999 etc",votes:905,desc:"Used to be good, now useless. Russia Based."},
-  {id:17,name:"ITA",tag:"ITA",votes:107,desc:"Useless clan that plays a lot and loses. Based in Italy."},
-  {id:18,name:"STF",tag:"STF",votes:590,desc:"Hack users, very close ties with Tanker Warning. Based in EU."},
-  {id:19,name:"GANG",tag:"GANG",votes:5,desc:"Nice friends, Nice people. Not very active. US bases."},
-  {id:20,name:"UCH & FALLS",tag:"UCH & FALLS",votes:289,desc:"Falls Members use hacks. Both clans arent that strong, if Falls stops cheating they will be as bad as an Average Mexican clan. Based in Mexico."}
+/* ════════════════════════════════════════════════
+   CLAN DEFINITIONS — edit flag/name/desc/tag here
+   Flags: 🇺🇸 🇮🇳 🇨🇳 🇷🇺 🇬🇧 🇲🇽 🇵🇭 🇮🇹 🇧🇷 🇩🇪 🇫🇷 🇰🇷 🇯🇵 🇨🇦 🇦🇺 🌎
+   ════════════════════════════════════════════════ */
+const CLAN_META = [
+  {id:1,  flag:"🇮🇳", name:"RΞЛ",                           tag:"RΞЛ",        votes:1940, desc:"Strongest hacker clan to ever exist. Most members are 15-16, Indian and Chinese Americans. Very active in everything, never lost a single match with full 6 members. Sold over $50,000 worth of hacks. Most influence over the cheaters of war robots, able to cut off the lifeline of all the hackers at once. India Based."},
+  {id:2,  flag:"🇺🇸", name:"Misfits",                        tag:"MF",         votes:1034, desc:"Elite P2W based in US, average age 20-40. They are known for being 100% honest — especially to the squad called Wick. US based."},
+  {id:3,  flag:"🇺🇸", name:"Wick",                           tag:"WICK",       votes:939,  desc:"People compare them to MF but they are not even close. Wick tried to be the \"mature\" ones but they almost never win. Punisher thinks he is tough, lol. US based."},
+  {id:4,  flag:"🇺🇸", name:"Berzerker",                      tag:"BERZ",       votes:300,  desc:"A clan led by a YouTuber whose channel survives on giveaways. Almost never wins. Vote for this if you're chasing a freebie. US based."},
+  {id:5,  flag:"🌎",  name:"HEAT & NEXT & Latin Clans",      tag:"LATAM",      votes:10,   desc:"Grouped them all. NEXT is only known because of JunkMale farming views off hacker content. HEAT is useless. Other Latin clans? Also not doing much. Mexico based."},
+  {id:6,  flag:"🇺🇸", name:"Overdrive",                      tag:"OVD",        votes:3,    desc:"A retired iOS members clan that recently tried to make a comeback. Huge egos, little to show. US based."},
+  {id:7,  flag:"🇺🇸", name:"Zen Warriors",                   tag:"ZΞЛ",        votes:830,  desc:"Thought they were the peacekeepers. RΞЛ made them go extinct. US based."},
+  {id:8,  flag:"🇷🇺", name:"Iron Stars",                     tag:"☆",          votes:1357, desc:"Have an insane history, currently one of the strongest clans on the board. Russia based."},
+  {id:9,  flag:"🇨🇳", name:"All Chinese Clans",              tag:"CN-ALL",     votes:296,  desc:"Most probably won't see this. There used to be hacker clans like Habibi and Nebula etc. Now most don't play or are very weak. China Based."},
+  {id:10, flag:"🇲🇽", name:"Legion",                         tag:"INTI",       votes:13,   desc:"Best Latin America clan, the strongest in the region. Mexico Based."},
+  {id:11, flag:"🇺🇸", name:"Universal Pro",                  tag:"UN",         votes:868,  desc:"A clan that was decent for a stretch but luck ran out. Now a weak shell — most members left and the leader is an odd character. US based."},
+  {id:12, flag:"🇬🇧", name:"HOWl",                           tag:"HOWL",       votes:135,  desc:"The leader is a kid from UK who loves abusing what little power he has. Threatened prime RΞЛ and got raided 19 times — most raids pulling over 1k pings. UK based."},
+  {id:13, flag:"🇺🇸", name:"DD",                             tag:"DD",         votes:190,  desc:"A clan that plays but rarely wins. Nobody is losing sleep over them. US based."},
+  {id:14, flag:"🇵🇭", name:"Team.PHL",                       tag:"PHL",        votes:385,  desc:"Based in the Philippines. A couple of solid Filipino-American members plus one content creator gives them some reach and moderate strength. Philippines based."},
+  {id:15, flag:"🇪🇺", name:"All Hacker Clans Except RΞЛ",   tag:"IYI/WRATH", votes:275,  desc:"Nice history, most not active anymore. Europe based."},
+  {id:16, flag:"🇷🇺", name:"All Russian Clans",              tag:"RU/999",     votes:905,  desc:"Used to be formidable. Now largely inactive and outclassed. Russia Based."},
+  {id:17, flag:"🇮🇹", name:"ITA",                            tag:"ITA",        votes:107,  desc:"Plays a lot and loses a lot. Italy based."},
+  {id:18, flag:"🇪🇺", name:"STF",                            tag:"STF",        votes:590,  desc:"Hack users with close ties to Tanker Warning. EU based."},
+  {id:19, flag:"🇺🇸", name:"GANG",                           tag:"GANG",       votes:5,    desc:"Good friends, nice people. Not very active. US based."},
+  {id:20, flag:"🇲🇽", name:"UCH & FALLS",                    tag:"UCH/FALLS",  votes:289,  desc:"Falls members use hacks. Neither clan is particularly strong — if Falls dropped the cheats they'd be average at best. Mexico based."},
 ];
 
-let clans = [...CLANS];
-let voted = JSON.parse(localStorage.getItem('eyj2-voted')||'{}');
-let userIP = 'SIMULATED_IP_' + Math.random(); // Placeholder for IP check
+/* ════════════════════════════════════════════════
+   STATE
+   ════════════════════════════════════════════════ */
+let clans = CLAN_META.map(m => ({...m, votes: 0}));
 let sortMode = 'votes';
-let onlineCount = 247;
-let lastRequestTime = 0;
-const GLOBAL_RATE_LIMIT = 3000; 
+let onlineCount = 0;
+let userFingerprint = '';
+let lastVoteTime = {};    // clanId -> timestamp (local only for UX)
+const VOTE_COOLDOWN = 30000;
+let dbReady = false;
+let realtimeChannel = null;
 
-// Retrieve votes from Supabase on load
-async function fetchDatabaseVotes() {
-  const { data, error } = await supabase.from('clans').select('id, votes');
-  if (data) {
-    data.forEach(dbClan => {
-      const localClan = clans.find(c => c.id === dbClan.id);
-      if (localClan) localClan.votes = dbClan.votes;
-    });
-    renderClans();
-    renderLeaderboard();
-  } else if (error) {
-    console.error("Failed to load initial Supabase data:", error);
-  }
+/* ════════════════════════════════════════════════
+   FINGERPRINT (for display; real auth is DB-side)
+   ════════════════════════════════════════════════ */
+function makeFingerprint() {
+  const nav = window.navigator;
+  const raw = [nav.userAgent, nav.language, screen.colorDepth, screen.width + 'x' + screen.height, new Date().getTimezoneOffset()].join('|');
+  let h = 0;
+  for (let i = 0; i < raw.length; i++) { h = ((h << 5) - h) + raw.charCodeAt(i); h |= 0; }
+  return 'FP_' + Math.abs(h).toString(16).toUpperCase();
 }
+userFingerprint = makeFingerprint();
 
-// Subscribe to real-time updates from Supabase
-supabase
-  .channel('public:clans')
-  .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'clans' }, payload => {
-    const updatedClan = payload.new;
-    const clanIndex = clans.findIndex(c => c.id === updatedClan.id);
-    if (clanIndex !== -1) {
-      clans[clanIndex].votes = updatedClan.votes;
-      renderClans();
-      renderLeaderboard();
+/* ════════════════════════════════════════════════
+   THREE.JS NEURAL NETWORK BACKGROUND
+   ════════════════════════════════════════════════ */
+function initBackground() {
+  const canvas = document.getElementById('bg-canvas');
+  if (!canvas || !window.THREE) return;
+  try {
+    const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true, powerPreference:'high-performance'});
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(70, innerWidth/innerHeight, 0.1, 1000);
+    camera.position.z = 6;
+
+    const nodeGeo = new THREE.SphereGeometry(0.04, 6, 6);
+    const nodes = [], nodeData = [];
+    const cols = [0xff1a1a, 0xff4400, 0xff6600, 0xff2200, 0xcc1100];
+    const nodeCount = window.innerWidth < 600 ? 70 : 130;
+
+    for (let i = 0; i < nodeCount; i++) {
+      const mat = new THREE.MeshBasicMaterial({color: cols[i % cols.length], transparent:true, opacity:.7});
+      const m = new THREE.Mesh(nodeGeo, mat);
+      const p = new THREE.Vector3((Math.random()-.5)*26, (Math.random()-.5)*16, (Math.random()-.5)*12);
+      m.position.copy(p);
+      nodeData.push({x:p.x,y:p.y,z:p.z,vx:(Math.random()-.5)*.006,vy:(Math.random()-.5)*.006,vz:(Math.random()-.5)*.004,ph:Math.random()*Math.PI*2});
+      scene.add(m); nodes.push(m);
     }
-  })
-  .subscribe();
 
-async function getIP() {
-    try {
-        const response = await fetch('https://api.ipify.org?format=json');
-        const data = await response.json();
-        userIP = data.ip;
-        console.log("System Node IP Identified:", userIP);
-    } catch (e) {
-        console.warn("Using local signature for identification.");
-    }
-}
-getIP();
-
-function saveVoted(){localStorage.setItem('eyj2-voted',JSON.stringify(voted));}
-
-/* ─── THREE.JS HEAVY NEURAL NETWORK ─── */
-const bgCanvas=document.getElementById('bg');
-const renderer=new THREE.WebGLRenderer({canvas:bgCanvas,alpha:true,antialias:true});
-renderer.setSize(window.innerWidth,window.innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-const scene=new THREE.Scene();
-const camera=new THREE.PerspectiveCamera(70,innerWidth/innerHeight,0.1,1000);
-camera.position.z=6;
-
-const nodeGeo=new THREE.SphereGeometry(0.04,8,8);
-const nodes=[],nodeData=[];
-const nodeColors=[0xff1a1a,0xff4400,0xff6600,0xff2200,0xcc1100];
-for(let i=0;i<140;i++){
-  const mat=new THREE.MeshBasicMaterial({color:nodeColors[i%nodeColors.length],transparent:true,opacity:0.7});
-  const m=new THREE.Mesh(nodeGeo,mat);
-  const p=new THREE.Vector3((Math.random()-0.5)*28,(Math.random()-0.5)*18,(Math.random()-0.5)*14);
-  m.position.copy(p);
-  nodeData.push({x:p.x,y:p.y,z:p.z,vx:(Math.random()-0.5)*0.006,vy:(Math.random()-0.5)*0.006,vz:(Math.random()-0.5)*0.004,phase:Math.random()*Math.PI*2});
-  scene.add(m); nodes.push(m);
-}
-
-const lineGroup=new THREE.Group();scene.add(lineGroup);
-
-function updateLines(){
-  while(lineGroup.children.length)lineGroup.remove(lineGroup.children[0]);
-  const redHex=[0xff1a1a,0xff3300,0xff4400,0xcc0000,0xff6600];
-  for(let i=0;i<nodes.length;i++){
-    for(let j=i+1;j<nodes.length;j++){
-      const d=nodes[i].position.distanceTo(nodes[j].position);
-      if(d<5){
-        const geo=new THREE.BufferGeometry().setFromPoints([nodes[i].position.clone(),nodes[j].position.clone()]);
-        const mat=new THREE.LineBasicMaterial({color:redHex[Math.floor(Math.random()*redHex.length)],transparent:true,opacity:Math.max(0,(1-d/5)*0.18)});
-        lineGroup.add(new THREE.Line(geo,mat));
+    const lineGrp = new THREE.Group(); scene.add(lineGrp);
+    function updateLines() {
+      while (lineGrp.children.length) lineGrp.remove(lineGrp.children[0]);
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i+1; j < nodes.length; j++) {
+          const d = nodes[i].position.distanceTo(nodes[j].position);
+          if (d < 5) {
+            const g = new THREE.BufferGeometry().setFromPoints([nodes[i].position.clone(), nodes[j].position.clone()]);
+            lineGrp.add(new THREE.Line(g, new THREE.LineBasicMaterial({color: cols[j % cols.length], transparent:true, opacity: Math.max(0,(1-d/5)*.17)})));
+          }
+        }
       }
     }
+
+    const pGeo = new THREE.BufferGeometry();
+    const pArr = new Float32Array(300*3);
+    for (let i = 0; i < 300; i++) { pArr[i*3]=(Math.random()-.5)*38; pArr[i*3+1]=(Math.random()-.5)*24; pArr[i*3+2]=(Math.random()-.5)*18; }
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pArr, 3));
+    scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({color:0xff2200, size:.05, transparent:true, opacity:.3})));
+
+    let mxB = innerWidth/2, myB = innerHeight/2, frame = 0;
+    document.addEventListener('mousemove', e => { mxB = e.clientX; myB = e.clientY; });
+
+    function tick() {
+      requestAnimationFrame(tick);
+      frame++;
+      nodes.forEach((n, i) => {
+        const d = nodeData[i];
+        d.x += d.vx; d.y += d.vy; d.z += d.vz;
+        if (Math.abs(d.x) > 13) d.vx *= -1;
+        if (Math.abs(d.y) > 8) d.vy *= -1;
+        if (Math.abs(d.z) > 6) d.vz *= -1;
+        n.position.set(d.x, d.y, d.z);
+        n.material.opacity = .3 + Math.sin(frame*.025 + d.ph) * .38;
+        n.material.color.setHex(frame % 100 < 50 ? 0xff1a1a : 0xff4400);
+      });
+      if (frame % 2 === 0) updateLines();
+      camera.position.x += (mxB/innerWidth*2 - 1) * .4 * .04;
+      camera.position.y += -(myB/innerHeight*2 - 1) * .3 * .04;
+      camera.lookAt(scene.position);
+      renderer.render(scene, camera);
+    }
+    tick();
+    window.addEventListener('resize', () => {
+      renderer.setSize(innerWidth, innerHeight);
+      camera.aspect = innerWidth/innerHeight;
+      camera.updateProjectionMatrix();
+    });
+  } catch(e) { console.warn('Three.js background skipped:', e); }
+}
+
+/* ════════════════════════════════════════════════
+   FIRE CURSOR
+   ════════════════════════════════════════════════ */
+function initFire() {
+  const fc = document.getElementById('fire-canvas');
+  if (!fc) return;
+  const ctx = fc.getContext('2d');
+  const resize = () => { fc.width = innerWidth; fc.height = innerHeight; };
+  resize();
+  window.addEventListener('resize', resize);
+
+  let cx = innerWidth/2, cy = innerHeight/2, tx = cx, ty = cy, inDoc = true;
+  document.addEventListener('mousemove', e => { tx = e.clientX; ty = e.clientY; });
+  document.addEventListener('mouseenter', () => inDoc = true);
+  document.addEventListener('mouseleave', () => inDoc = false);
+
+  class FP {
+    constructor(x, y) {
+      this.x = x + (Math.random()-.5)*8; this.y = y;
+      this.vx = (Math.random()-.5)*1.5; this.vy = -(Math.random()*3+1.5);
+      this.life = 1; this.decay = Math.random()*.04+.025;
+      this.size = Math.random()*7+3; this.t = Math.random();
+    }
+    step() {
+      this.x += this.vx + (Math.random()-.5)*.5;
+      this.y += this.vy; this.vy *= .97; this.vx *= .98;
+      this.life -= this.decay; this.size *= .97;
+    }
+    draw(c) {
+      if (this.life <= 0) return;
+      const a = Math.max(0, this.life);
+      const g = Math.floor(this.t < .3 ? 240*a : this.t < .6 ? 100*a : 30*a);
+      const gr = c.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size);
+      gr.addColorStop(0, `rgba(255,${g},0,${a*.9})`);
+      gr.addColorStop(.5, `rgba(255,${Math.floor(g*.5)},0,${a*.5})`);
+      gr.addColorStop(1, 'rgba(180,0,0,0)');
+      c.beginPath(); c.fillStyle = gr; c.arc(this.x, this.y, this.size, 0, Math.PI*2); c.fill();
+    }
+  }
+  class EP {
+    constructor(x, y) {
+      this.x = x + (Math.random()-.5)*12; this.y = y;
+      this.vx = (Math.random()-.5)*2.5; this.vy = -(Math.random()*4+2);
+      this.life = 1; this.decay = Math.random()*.02+.015; this.size = Math.random()*2.5+.5;
+    }
+    step() { this.x += this.vx; this.y += this.vy; this.vy += .04; this.vx += (Math.random()-.5)*.3; this.life -= this.decay; }
+    draw(c) {
+      if (this.life <= 0) return;
+      const a = Math.max(0, this.life);
+      c.beginPath(); c.fillStyle = `rgba(255,${Math.floor(200*a)},0,${a})`;
+      c.shadowColor = '#ff4400'; c.shadowBlur = 4;
+      c.arc(this.x, this.y, this.size, 0, Math.PI*2); c.fill(); c.shadowBlur = 0;
+    }
+  }
+
+  let parts = [];
+  window._addFireBurst = (x, y, n) => { for (let i = 0; i < n; i++) parts.push(new FP(x, y)); };
+
+  function loop() {
+    requestAnimationFrame(loop);
+    cx += (tx-cx)*.15; cy += (ty-cy)*.15;
+    ctx.clearRect(0, 0, fc.width, fc.height);
+    if (inDoc) {
+      for (let i = 0; i < 5; i++) parts.push(new FP(cx, cy));
+      if (Math.random() < .3) parts.push(new EP(cx, cy));
+    }
+    parts = parts.filter(p => p.life > 0);
+    parts.forEach(p => { p.step(); p.draw(ctx); });
+  }
+  loop();
+}
+
+/* ════════════════════════════════════════════════
+   SUPABASE: LOAD + REALTIME
+   ════════════════════════════════════════════════ */
+async function loadVotes() {
+  try {
+    const { data, error } = await sb.from('clans').select('id, votes');
+    if (error) throw error;
+    if (data && data.length > 0) {
+      data.forEach(row => {
+        const c = clans.find(x => x.id === row.id);
+        if (c) c.votes = row.votes;
+      });
+    }
+    setDbStatus('live', 'LIVE');
+    dbReady = true;
+    renderClans();
+    renderLeaderboard();
+  } catch(e) {
+    console.error('loadVotes error:', e);
+    setDbStatus('err', 'DB ERR');
+    // Still render with seed data
+    renderClans();
+    renderLeaderboard();
   }
 }
 
-const pGeo=new THREE.BufferGeometry();
-const pCount=350;
-const pPos=new Float32Array(pCount*3);
-for(let i=0;i<pCount;i++){pPos[i*3]=(Math.random()-0.5)*40;pPos[i*3+1]=(Math.random()-0.5)*25;pPos[i*3+2]=(Math.random()-0.5)*20;}
-pGeo.setAttribute('position',new THREE.BufferAttribute(pPos,3));
-const pMat=new THREE.PointsMaterial({color:0xff2200,size:0.05,transparent:true,opacity:0.35});
-scene.add(new THREE.Points(pGeo,pMat));
-
-let mx=innerWidth/2,my=innerHeight/2,frame=0;
-document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;});
-
-function animateBg(){
-  requestAnimationFrame(animateBg);
-  frame++;
-  nodes.forEach((n,i)=>{
-    const d=nodeData[i];
-    d.x+=d.vx;d.y+=d.vy;d.z+=d.vz;
-    if(Math.abs(d.x)>14){d.vx*=-1;}
-    if(Math.abs(d.y)>9){d.vy*=-1;}
-    if(Math.abs(d.z)>7){d.vz*=-1;}
-    n.position.set(d.x,d.y,d.z);
-    n.material.opacity=0.4+Math.sin(frame*0.025+d.phase)*0.4;
-    n.material.color.setHex(frame%120<60?0xff1a1a:0xff4400);
-  });
-  if(frame%2===0)updateLines();
-  camera.position.x+=(mx/innerWidth*2-1)*0.4*0.04;
-  camera.position.y+=-(my/innerHeight*2-1)*0.3*0.04;
-  camera.lookAt(scene.position);
-  renderer.render(scene,camera);
-}
-animateBg();
-window.addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();});
-
-/* ─── REALISTIC FIRE CURSOR ─── */
-const fc=document.getElementById('fire-canvas');
-const fctx=fc.getContext('2d');
-fc.width=innerWidth;fc.height=innerHeight;
-window.addEventListener('resize',()=>{fc.width=innerWidth;fc.height=innerHeight;});
-
-let fireParticles=[];
-let curX=innerWidth/2,curY=innerHeight/2;
-let targetX=curX,targetY=curY;
-
-document.addEventListener('mousemove',e=>{targetX=e.clientX;targetY=e.clientY;});
-
-class FireParticle{
-  constructor(x,y){
-    this.x=x+(Math.random()-0.5)*8;
-    this.y=y;
-    this.vx=(Math.random()-0.5)*1.5;
-    this.vy=-(Math.random()*3+1.5);
-    this.life=1;
-    this.decay=Math.random()*0.04+0.025;
-    this.size=Math.random()*7+3;
-    this.type=Math.random();
-  }
-  update(){
-    this.x+=this.vx+(Math.random()-0.5)*0.5;
-    this.y+=this.vy;
-    this.vy*=0.97;
-    this.vx*=0.98;
-    this.life-=this.decay;
-    this.size*=0.97;
-  }
-  draw(ctx){
-    if(this.life<=0)return;
-    const a=Math.max(0,this.life);
-    let r,g,b;
-    if(this.type<0.3){r=255;g=Math.floor(240*a);b=0;}
-    else if(this.type<0.6){r=255;g=Math.floor(100*a);b=0;}
-    else if(this.type<0.85){r=255;g=Math.floor(30*a);b=0;}
-    else{r=200;g=60;b=0;}
-    const grad=ctx.createRadialGradient(this.x,this.y,0,this.x,this.y,this.size);
-    grad.addColorStop(0,`rgba(${r},${g},${b},${a*0.9})`);
-    grad.addColorStop(0.5,`rgba(${r},${Math.floor(g*0.5)},0,${a*0.5})`);
-    grad.addColorStop(1,`rgba(180,0,0,0)`);
-    ctx.beginPath();
-    ctx.fillStyle=grad;
-    ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
-    ctx.fill();
-  }
+function subscribeRealtime() {
+  realtimeChannel = sb.channel('clan-votes')
+    .on('postgres_changes', {event:'UPDATE', schema:'public', table:'clans'}, payload => {
+      const row = payload.new;
+      const c = clans.find(x => x.id === row.id);
+      if (c) {
+        c.votes = row.votes;
+        // Animate just that count
+        const el = document.getElementById('vc-' + row.id);
+        if (el) { el.textContent = row.votes; el.style.color = '#fff'; setTimeout(() => { el.style.color = ''; }, 400); }
+        updateStats();
+        updateLeaderboardRow(row.id);
+      }
+    })
+    .subscribe(status => {
+      if (status === 'SUBSCRIBED') setDbStatus('live', 'LIVE');
+      else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') setDbStatus('err', 'RECONNECTING');
+    });
 }
 
-class EmberParticle{
-  constructor(x,y){
-    this.x=x+(Math.random()-0.5)*12;
-    this.y=y;
-    this.vx=(Math.random()-0.5)*2.5;
-    this.vy=-(Math.random()*4+2);
-    this.life=1;
-    this.decay=Math.random()*0.02+0.015;
-    this.size=Math.random()*2.5+0.5;
-  }
-  update(){
-    this.x+=this.vx;
-    this.y+=this.vy;
-    this.vy+=0.04;
-    this.vx+=(Math.random()-0.5)*0.3;
-    this.life-=this.decay;
-  }
-  draw(ctx){
-    if(this.life<=0)return;
-    const a=Math.max(0,this.life);
-    ctx.beginPath();
-    ctx.fillStyle=`rgba(255,${Math.floor(200*a)},0,${a})`;
-    ctx.shadowColor='#ff4400';
-    ctx.shadowBlur=4;
-    ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
-    ctx.fill();
-    ctx.shadowBlur=0;
-  }
+function setDbStatus(cls, txt) {
+  const el = document.getElementById('db-status');
+  if (!el) return;
+  el.className = cls;
+  el.textContent = txt;
 }
 
-let isMouseInDoc=true;
-document.addEventListener('mouseenter',()=>isMouseInDoc=true);
-document.addEventListener('mouseleave',()=>isMouseInDoc=false);
+/* ════════════════════════════════════════════════
+   RENDER CLANS
+   ════════════════════════════════════════════════ */
+let sortedCache = [];
 
-function animateFire(){
-  requestAnimationFrame(animateFire);
-  curX+=(targetX-curX)*0.15;
-  curY+=(targetY-curY)*0.15;
-  fctx.clearRect(0,0,fc.width,fc.height);
-  if(isMouseInDoc){
-    for(let i=0;i<5;i++) fireParticles.push(new FireParticle(curX,curY));
-    if(Math.random()<0.3) fireParticles.push(new EmberParticle(curX,curY));
-  }
-  fireParticles=fireParticles.filter(p=>p.life>0);
-  fireParticles.forEach(p=>{p.update();p.draw(fctx);});
-}
-animateFire();
-
-/* ─── LOADING ─── */
-const logs=['Establishing secure tunnel... OK','Loading clan registry... 20 entries','Igniting neural fire grid... ACTIVE','Connecting to Supabase... SYNCED','Anti-spam protocols... ENGAGED','System ready. Welcome, operator.'];
-let li=0;
-function addLog(){
-  if(li>=logs.length){
-    setTimeout(()=>{
-      const l=document.getElementById('loading');
-      l.style.opacity='0';
-      l.style.transition='opacity 0.5s';
-      setTimeout(()=>{
-        l.style.display='none';
-        document.getElementById('app').style.display='block';
-        fetchDatabaseVotes(); // Kick off DB load as the screen opens
-      },500);
-    },400);
-    return;
-  }
-  const d=document.createElement('div');
-  d.className='load-log';
-  d.style.animationDelay='0s';
-  d.innerHTML='<span style="color:rgba(255,26,26,0.4)">> </span>'+logs[li];
-  document.getElementById('load-logs').appendChild(d);
-  li++;
-  setTimeout(addLog,380);
-}
-setTimeout(addLog,800);
-
-/* ─── PAGES ─── */
-function showPage(p,btn){
-  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(el=>el.classList.remove('active'));
-  document.getElementById('page-'+p).classList.add('active');
-  if(btn)btn.classList.add('active');
-  if(p==='leaderboard')renderLeaderboard();
+function getSorted() {
+  let arr = [...clans];
+  if (sortMode === 'votes') arr.sort((a,b) => b.votes - a.votes);
+  else arr.sort((a,b) => a.name.localeCompare(b.name));
+  sortedCache = arr;
+  return arr;
 }
 
-/* ─── RENDER CLANS ─── */
-function renderClans(){
-  const search=document.getElementById('search-input').value.toLowerCase();
-  let filtered=[...clans].filter(c=>c.name.toLowerCase().includes(search)||c.tag.toLowerCase().includes(search)||c.desc.toLowerCase().includes(search));
-  if(sortMode==='votes')filtered.sort((a,b)=>b.votes-a.votes);
-  else filtered.sort((a,b)=>a.name.localeCompare(b.name));
-  
-  const maxV=Math.max(...clans.map(c=>c.votes),1);
-  const total=clans.reduce((s,c)=>s+c.votes,0);
-  document.getElementById('total-votes').textContent=total;
-  
-  const leader=clans.reduce((a,b)=>a.votes>b.votes?a:b);
-  document.getElementById('lead-clan-name').textContent=leader.name;
-  document.getElementById('lead-clan-votes').textContent=leader.votes;
-  
-  const allSorted=[...clans].sort((a,b)=>b.votes-a.votes);
-  document.getElementById('clans-grid').innerHTML=filtered.map(c=>{
-    const rank=allSorted.findIndex(x=>x.id===c.id)+1;
-    const rc=rank===1?'top1':rank<=3?'top3':rank<=5?'top5':'';
-    const rl=rank===1?'▲ #1 LEADER':rank===2?'▲ #2':rank===3?'▲ #3':'#'+rank;
-    const pct=Math.round(c.votes/maxV*100);
-    
-    // Check voting state for this IP/System
-    const voterKey = userIP + '_' + c.id;
-    const hasVoted = voted[voterKey];
-    const canVote = !hasVoted || (Date.now() - hasVoted.ts > 30000);
-    const timeLeft = hasVoted ? Math.max(0, 30 - Math.floor((Date.now() - hasVoted.ts) / 1000)) : 0;
-    
+function updateStats() {
+  const total = clans.reduce((s,c) => s+c.votes, 0);
+  const leader = clans.reduce((a,b) => a.votes > b.votes ? a : b, clans[0]);
+  const setT = id => { const e = document.getElementById(id); if(e) e.textContent = total; };
+  setT('total-votes'); setT('lb-total');
+  const setL = (nid, vid) => {
+    const ne = document.getElementById(nid), ve = document.getElementById(vid);
+    if(ne) ne.textContent = leader.name;
+    if(ve) ve.textContent = leader.votes;
+  };
+  setL('lead-name','lead-votes');
+  const lbn = document.getElementById('lb-leader'); if(lbn) lbn.textContent = leader.name;
+  const sorted = [...clans].sort((a,b) => b.votes - a.votes);
+  const gap = sorted.length > 1 ? sorted[0].votes - sorted[1].votes : 0;
+  const gbEl = document.getElementById('lb-gap'); if(gbEl) gbEl.textContent = gap;
+  const ocEl = document.getElementById('lb-online'); if(ocEl) ocEl.textContent = onlineCount || '—';
+  const ocN = document.getElementById('online-count'); if(ocN) ocN.textContent = (onlineCount || '—') + ' ONLINE';
+}
+
+function renderClans() {
+  const search = (document.getElementById('search')?.value || '').toLowerCase();
+  const allSorted = getSorted();
+  const filtered = search ? allSorted.filter(c =>
+    c.name.toLowerCase().includes(search) ||
+    c.tag.toLowerCase().includes(search) ||
+    c.desc.toLowerCase().includes(search)
+  ) : allSorted;
+
+  const maxV = Math.max(...clans.map(c => c.votes), 1);
+  const grid = document.getElementById('clans-grid');
+  if (!grid) return;
+
+  // Rank by votes
+  const vRanked = [...clans].sort((a,b) => b.votes-a.votes);
+
+  grid.innerHTML = filtered.map(c => {
+    const rank = vRanked.findIndex(x => x.id === c.id) + 1;
+    const rc = rank===1?'r1':rank===2?'r2':rank===3?'r3':rank<=5?'r5':'';
+    const rl = rank===1?'▲ LEADER':'#'+rank;
+    const pct = Math.round(c.votes / maxV * 100);
+    const now = Date.now();
+    const lv = lastVoteTime[c.id] || 0;
+    const canVote = (now - lv) >= VOTE_COOLDOWN;
+    const tLeft = canVote ? 0 : Math.ceil((VOTE_COOLDOWN - (now-lv))/1000);
+    const logo = [...c.name].find(ch => ch.trim()) || '?';
+
     return `<div class="clan-card" id="card-${c.id}" onmousemove="tiltCard(this,event)" onmouseleave="resetTilt(this)">
-      <div class="clan-rank ${rc}">${rl}</div>
-      <div class="clan-header">
-        <div class="clan-logo">${c.name[0]}</div>
-        <div><div class="clan-name">${c.name}</div><div class="clan-tag">[${c.tag}]</div></div>
+      <div class="clan-top-row">
+        <div class="clan-rank ${rc}">${rl}</div>
+        <div class="clan-flag" title="Region">${c.flag||''}</div>
       </div>
-      <div class="clan-desc">${c.desc}</div>
+      <div class="clan-header">
+        <div class="clan-logo">${logo}</div>
+        <div>
+          <div class="clan-name">${escHtml(c.name)}</div>
+          <div class="clan-tag">[${escHtml(c.tag)}]</div>
+        </div>
+      </div>
+      <div class="clan-desc">${escHtml(c.desc)}</div>
       <div class="vote-row">
-        <div><div class="vote-count" id="vc-${c.id}">${c.votes}</div><span class="vote-label">VOTES</span></div>
+        <div class="vote-left">
+          <div class="vote-count" id="vc-${c.id}" style="transition:color .3s">${c.votes}</div>
+          <div class="vote-label">VOTES</div>
+        </div>
         ${canVote
-          ?`<button class="vote-btn" onclick="castVote(${c.id})"><span>⬡ VOTE</span></button>`
-          :`<div><div class="voted-label">LOCKED (${timeLeft}s)</div><div class="cooldown-bar"><div class="cooldown-fill" id="cd-${c.id}" style="width:${Math.round(timeLeft/30*100)}%;transition:width ${timeLeft}s linear"></div></div></div>`}
+          ? `<button class="vote-btn" onclick="castVote(${c.id},this)"><span class="vote-btn-inner">⬡ VOTE</span></button>`
+          : `<div class="voted-box">
+               <div class="voted-label">VOTED (${tLeft}s)</div>
+               <div class="cd-bar"><div class="cd-fill" id="cd-${c.id}" style="width:${Math.round(tLeft/30*100)}%;transition:width ${tLeft}s linear"></div></div>
+             </div>`
+        }
       </div>
       <div class="vote-bar"><div class="vote-fill" style="width:${pct}%"></div></div>
     </div>`;
-  }).join('');
+  }).join('') || '<div style="font-family:\'Share Tech Mono\',monospace;font-size:11px;color:rgba(255,60,30,.4);padding:20px 0;">NO CLANS MATCH SEARCH</div>';
+
+  updateStats();
+
+  // Restart cooldown timers
+  filtered.forEach(c => {
+    const lv = lastVoteTime[c.id];
+    if (lv) {
+      const rem = Math.max(0, VOTE_COOLDOWN - (Date.now()-lv));
+      if (rem > 100) setTimeout(() => renderClans(), rem + 200);
+      const el = document.getElementById('cd-'+c.id);
+      if (el) { el.style.width = Math.round(rem/VOTE_COOLDOWN*100)+'%'; setTimeout(() => { el.style.transition = `width ${rem/1000}s linear`; el.style.width = '0%'; }, 30); }
+    }
+  });
 }
 
-function tiltCard(el,e){const r=el.getBoundingClientRect();const cx=r.left+r.width/2,cy=r.top+r.height/2;const dx=(e.clientX-cx)/r.width*16,dy=(e.clientY-cy)/r.height*16;el.style.transform=`perspective(600px) rotateX(${-dy}deg) rotateY(${dx}deg) translateY(-2px)`;}
-function resetTilt(el){el.style.transform='translateY(-2px)';}
-function setSort(m){sortMode=m;document.getElementById('sort-votes').classList.toggle('active',m==='votes');document.getElementById('sort-alpha').classList.toggle('active',m==='alpha');renderClans();}
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
-async function castVote(id){
-  const now = Date.now();
-  
-  // 1. Global Rate Limit (Anti-Spam)
-  if(now - lastRequestTime < GLOBAL_RATE_LIMIT) {
-    showToast('!! RATE LIMIT EXCEEDED !!');
-    return;
-  }
-  
-  // 2. IP-based unique voting check
-  const voterKey = userIP + '_' + id;
-  if(voted[voterKey] && now - voted[voterKey].ts < 30000){
-    showToast('IP VOTE COOLDOWN ACTIVE');
-    return;
-  }
-
-  const c=clans.find(x=>x.id===id);
-  if(!c)return;
-
-  // Optimistic UI Update
-  lastRequestTime = now;
-  c.votes++;
-  voted[voterKey] = {ts: now};
-  saveVoted();
-  
-  showToast('⬡ VOTE RECORDED BY ' + userIP);
+function tiltCard(el, e) {
+  const r = el.getBoundingClientRect();
+  const dx = (e.clientX - r.left - r.width/2) / r.width * 14;
+  const dy = (e.clientY - r.top - r.height/2) / r.height * 14;
+  el.style.transform = `perspective(600px) rotateX(${-dy}deg) rotateY(${dx}deg) translateY(-2px)`;
+}
+function resetTilt(el) { el.style.transform = ''; }
+function setSort(m) {
+  sortMode = m;
+  document.getElementById('sort-v')?.classList.toggle('active', m==='votes');
+  document.getElementById('sort-a')?.classList.toggle('active', m==='alpha');
   renderClans();
+}
+
+/* ════════════════════════════════════════════════
+   CAST VOTE
+   ════════════════════════════════════════════════ */
+async function castVote(id, btn) {
+  const now = Date.now();
+  const lv = lastVoteTime[id] || 0;
+  if (now - lv < VOTE_COOLDOWN) { toast('⏱ COOLDOWN ACTIVE'); return; }
+
+  const c = clans.find(x => x.id === id);
+  if (!c) return;
+
+  // Optimistic update
+  lastVoteTime[id] = now;
+  c.votes++;
+  if (btn) btn.disabled = true;
+
+  // Flash card
+  const card = document.getElementById('card-' + id);
+  if (card) { card.style.boxShadow = '0 0 50px rgba(255,26,26,.45)'; setTimeout(() => card.style.boxShadow = '', 800); }
+
+  // Fire burst
+  if (window._addFireBurst) { const rect = card?.getBoundingClientRect(); window._addFireBurst(rect ? rect.left + rect.width/2 : innerWidth/2, rect ? rect.top + rect.height/2 : innerHeight/2, 18); }
+
+  toast('⬡ VOTE CAST → ' + c.name);
+  renderClans();
+  updateStats();
   renderLeaderboard();
 
-  // Send to Supabase Database
-  const { error } = await supabase
-    .from('clans')
-    .update({ votes: c.votes })
-    .eq('id', id);
-
-  if (error) {
-     console.error("Database sync failed:", error);
-     showToast('!! DB SYNC ERROR !!');
-     // Revert vote on failure
-     c.votes--;
-     renderClans();
-     renderLeaderboard();
-     return;
+  // Write to Supabase
+  try {
+    const { error } = await sb.from('clans').update({ votes: c.votes }).eq('id', id);
+    if (error) throw error;
+  } catch(e) {
+    console.error('Vote sync error:', e);
+    toast('⚠ SYNC ERROR — retrying...');
+    // Retry once
+    setTimeout(async () => {
+      try { await sb.from('clans').update({ votes: c.votes }).eq('id', id); }
+      catch(e2) {
+        // Revert
+        c.votes--;
+        lastVoteTime[id] = 0;
+        toast('!! DB WRITE FAILED — vote reverted');
+        renderClans();
+      }
+    }, 2000);
   }
-
-  const card=document.getElementById('card-'+id);
-  if(card){card.style.boxShadow='0 0 60px rgba(255,26,26,0.5)';setTimeout(()=>{card.style.boxShadow='';},900);}
-  for(let i=0;i<20;i++) fireParticles.push(new FireParticle(targetX,targetY));
 }
 
-function showToast(msg){
-  const t=document.getElementById('toast');
-  const d=document.createElement('div');d.className='toast-item';d.textContent=msg;t.appendChild(d);
-  setTimeout(()=>{d.style.opacity='0';d.style.transition='opacity 0.3s';setTimeout(()=>d.remove(),300);},2500);
-}
-
-function renderLeaderboard(){
-  const sorted=[...clans].sort((a,b)=>b.votes-a.votes);
-  const total=clans.reduce((s,c)=>s+c.votes,0);
-  document.getElementById('lb-total').textContent=total;
-  document.getElementById('lb-online').textContent=onlineCount;
-  document.getElementById('lb-leader').textContent=sorted[0]?.name||'-';
-  document.getElementById('lb-margin').textContent=sorted.length>1?sorted[0].votes-sorted[1].votes:0;
-  
-  document.getElementById('lb-body').innerHTML=sorted.map((c,i)=>{
-    const rank=i+1;const rc=rank===1?'rank-1':rank===2?'rank-2':rank===3?'rank-3':'';
-    const pct=total>0?((c.votes/total)*100).toFixed(1):0;
-    const medal=rank===1?'▲':rank===2?'●':rank===3?'◆':'';
-    return `<tr class="lb-row ${rc}">
-      <td class="lb-rank-num">${medal||'#'+rank}</td>
-      <td><span style="font-family:'Orbitron',monospace;font-weight:700">${c.name}</span></td>
-      <td><span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:rgba(255,60,30,0.4)">[${c.tag}]</span></td>
-      <td class="lb-votes">${c.votes}</td>
-      <td>${pct}%</td>
+/* ════════════════════════════════════════════════
+   LEADERBOARD
+   ════════════════════════════════════════════════ */
+function renderLeaderboard() {
+  const sorted = [...clans].sort((a,b) => b.votes - a.votes);
+  const total = clans.reduce((s,c) => s+c.votes, 0);
+  const body = document.getElementById('lb-body');
+  if (!body) return;
+  body.innerHTML = sorted.map((c, i) => {
+    const rank = i+1;
+    const rc = rank===1?'r1':rank===2?'r2':rank===3?'r3':'';
+    const pct = total > 0 ? ((c.votes/total)*100).toFixed(1) : '0.0';
+    const medal = rank===1?'▲':rank===2?'●':rank===3?'◆':'#'+rank;
+    return `<tr class="lb-row ${rc}" id="lbr-${c.id}">
+      <td class="lb-rank">${medal}</td>
+      <td><span class="lb-name">${escHtml(c.name)}</span></td>
+      <td><span class="lb-tag">[${escHtml(c.tag)}]</span></td>
+      <td class="lb-votes" id="lbv-${c.id}">${c.votes}</td>
+      <td class="lb-bar-cell">
+        <div style="font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(255,60,30,.5)">${pct}%</div>
+        <div class="lb-bar"><div class="lb-fill" id="lbf-${c.id}" style="width:${pct}%"></div></div>
+      </td>
     </tr>`;
   }).join('');
+  updateStats();
 }
+
+function updateLeaderboardRow(id) {
+  const total = clans.reduce((s,c) => s+c.votes, 0);
+  const c = clans.find(x => x.id === id);
+  if (!c) return;
+  const pct = total > 0 ? ((c.votes/total)*100).toFixed(1) : '0.0';
+  const vEl = document.getElementById('lbv-' + id); if (vEl) vEl.textContent = c.votes;
+  const fEl = document.getElementById('lbf-' + id); if (fEl) fEl.style.width = pct + '%';
+  updateStats();
+}
+
+/* ════════════════════════════════════════════════
+   TOAST
+   ════════════════════════════════════════════════ */
+function toast(msg) {
+  const wrap = document.getElementById('toast');
+  if (!wrap) return;
+  const d = document.createElement('div');
+  d.className = 'toast-msg';
+  d.textContent = msg;
+  wrap.appendChild(d);
+  setTimeout(() => { d.style.opacity = '0'; d.style.transition = 'opacity .3s'; setTimeout(() => d.remove(), 350); }, 2500);
+}
+
+/* ════════════════════════════════════════════════
+   PAGE NAV
+   ════════════════════════════════════════════════ */
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const pg = document.getElementById('page-' + name);
+  if (pg) pg.classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (name === 'leaderboard') renderLeaderboard();
+}
+
+/* ════════════════════════════════════════════════
+   SIMULATED ONLINE COUNT
+   ════════════════════════════════════════════════ */
+function tickOnline() {
+  onlineCount = Math.max(180, Math.min(420, onlineCount + (Math.random()<.5?1:-1)*Math.floor(Math.random()*4)));
+  const el = document.getElementById('online-count');
+  if (el) el.textContent = onlineCount + ' ONLINE';
+  const lb = document.getElementById('lb-online');
+  if (lb) lb.textContent = onlineCount;
+}
+onlineCount = 230 + Math.floor(Math.random() * 80);
+setInterval(tickOnline, 3000);
+
+/* ════════════════════════════════════════════════
+   LOADING SEQUENCE → BOOT
+   ════════════════════════════════════════════════ */
+const LOGS = [
+  'Establishing encrypted tunnel... OK',
+  'Loading clan registry... 20 ENTRIES',
+  'Igniting neural fire grid... ACTIVE',
+  'Connecting to Supabase cluster... SYNCING',
+  'Anti-spam protocols... ENGAGED',
+  'IP fingerprint acquired: ' + (typeof userFingerprint !== 'undefined' ? userFingerprint : 'UNKNOWN'),
+  'System ready. Welcome, operator.',
+];
+
+let logIdx = 0;
+function nextLog() {
+  if (logIdx >= LOGS.length) {
+    setTimeout(() => {
+      const l = document.getElementById('loading');
+      if (l) { l.style.opacity = '0'; setTimeout(() => { l.style.display = 'none'; }, 520); }
+      const app = document.getElementById('app');
+      if (app) app.style.display = 'flex';
+      // Kick off DB + realtime
+      loadVotes().then(() => subscribeRealtime());
+    }, 300);
+    return;
+  }
+  const d = document.createElement('div');
+  d.className = 'load-log';
+  d.innerHTML = '<span style="color:rgba(255,26,26,.4)">&gt; </span>' + LOGS[logIdx];
+  document.getElementById('load-logs')?.appendChild(d);
+  logIdx++;
+  setTimeout(nextLog, 370);
+}
+
+/* ════════════════════════════════════════════════
+   INIT
+   ════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  initBackground();
+  initFire();
+  setTimeout(nextLog, 700);
+});
+
+// Catch unhandled promise rejections silently
+window.addEventListener('unhandledrejection', e => {
+  console.warn('Unhandled:', e.reason);
+  e.preventDefault();
+});
 </script>
 </body>
 </html>
