@@ -21,14 +21,11 @@ body{
   -webkit-font-smoothing:antialiased;
 }
 
-/* animation fuck cpu */
 #bg-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
 #fire-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;}
 
-/* shushi */
 #app{position:relative;z-index:2;min-height:100vh;display:flex;flex-direction:column;}
 
-/* wanna be hacker */
 #loading{
   position:fixed;inset:0;background:#050505;z-index:9999;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
@@ -58,7 +55,7 @@ body{
 @keyframes pulse-ring{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(255,50,0,.5)}50%{opacity:.7;box-shadow:0 0 0 5px transparent}}
 @keyframes slide-in{from{transform:translateX(110%);opacity:0}to{transform:none;opacity:1}}
 
-/* more cpu rape */
+/* ── NAV ── */
 nav{
   position:sticky;top:0;z-index:100;
   background:rgba(5,5,5,.94);border-bottom:1px solid rgba(255,26,26,.18);
@@ -79,11 +76,9 @@ nav{
 .online-badge{font-family:'Share Tech Mono',monospace;font-size:10px;color:#ff6644;display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;}
 .pulse-dot{width:5px;height:5px;border-radius:50%;background:#ff3300;animation:pulse-ring 1.5s infinite;flex-shrink:0;}
 
-/* sex */
 .page{display:none;flex:1;}
 .page.active{display:block;}
 
-/* fuck */
 #hero{text-align:center;padding:clamp(30px,6vw,60px) 20px clamp(24px,4vw,40px);position:relative;}
 .scan-line{position:absolute;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--red),transparent);animation:scanline 5s linear infinite;opacity:.2;pointer-events:none;}
 .hero-title{
@@ -110,10 +105,8 @@ nav{
 .hero-btn:hover{color:#050505;box-shadow:0 0 40px rgba(255,26,26,.55);}
 .hero-btn-inner{position:relative;z-index:1;}
 
-/* ahh */
 .content-wrap{max-width:1200px;margin:0 auto;padding:0 16px 48px;width:100%;}
 
-/* here */
 .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:20px 0;}
 @media(max-width:540px){.stats-row{grid-template-columns:1fr 1fr;gap:8px;}}
 .stat-card{
@@ -124,7 +117,6 @@ nav{
 .stat-num{font-family:'Orbitron',monospace;font-size:clamp(18px,3vw,24px);font-weight:900;color:var(--red);text-shadow:var(--glow);}
 .stat-label{font-size:9px;letter-spacing:2px;color:rgba(255,100,60,.5);text-transform:uppercase;margin-top:4px;font-family:'Share Tech Mono',monospace;}
 
-/* no one gonna use btw*/
 .search-bar{display:flex;gap:6px;margin:18px 0;align-items:center;flex-wrap:wrap;}
 .search-input{
   flex:1;min-width:120px;
@@ -143,7 +135,6 @@ nav{
 }
 .sort-btn:hover,.sort-btn.active{border-color:var(--red);color:var(--red);background:rgba(255,26,26,.1);}
 
-/*seprate  */
 .section-title{
   font-family:'Orbitron',monospace;font-size:10px;letter-spacing:5px;
   color:rgba(255,60,30,.5);text-transform:uppercase;
@@ -151,7 +142,6 @@ nav{
 }
 .section-title::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(255,26,26,.3),transparent);}
 
-/* clan */
 .clans-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;}
 @media(max-width:400px){.clans-grid{grid-template-columns:1fr;}}
 
@@ -212,7 +202,6 @@ nav{
 .vote-bar{height:2px;background:rgba(255,26,26,.07);margin-top:10px;overflow:hidden;}
 .vote-fill{height:100%;background:linear-gradient(90deg,#ff4400,#ff1a1a);transition:width .9s cubic-bezier(.4,0,.2,1);}
 
-/* ── TOAST ── */
 #toast{position:fixed;top:72px;right:16px;z-index:9990;display:flex;flex-direction:column;gap:6px;max-width:calc(100vw - 32px);}
 .toast-msg{
   background:rgba(255,26,26,.08);border:1px solid var(--red);
@@ -332,6 +321,7 @@ nav{
     </div>
   </div>
 
+  <!-- LEADERBOARD PAGE -->
   <div id="page-leaderboard" class="page">
     <div class="content-wrap" style="padding-top:24px;">
       <div class="section-title" style="margin-bottom:20px;">LIVE LEADERBOARD</div>
@@ -355,23 +345,21 @@ nav{
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script>
-
 const SUPABASE_URL = 'https://mjwkndckwobgpieyfgbi.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_UyU-X4YMB11Id89NSJZN7w_cMwbSQ-i';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-
 const CLAN_META = [
   {id:1,  flag:"🇮🇳", name:"RΞЛ",                           tag:"RΞЛ",        votes:1940, desc:"Strongest hacker clan to ever exist. Most members are 15-16, Indian and Chinese Americans. Very active in everything, never lost a single match with full 6 members. Sold over $50,000 worth of hacks. Most influence over the cheaters of war robots, able to cut off the lifeline of all the hackers at once. India Based."},
-  {id:2,  flag:"🇺🇸", name:"Misfits",                        tag:"MF",         votes:1526, desc:"Elite P2W based in US, average age 20-40. They are known for being 100% honest — especially to the squad called Wick. US based."},
+  {id:2,  flag:"🇺🇸", name:"Misfits",                        tag:"MF",         votes:1534, desc:"Elite P2W based in US, average age 20-40. They are known for being 100% honest — especially to the squad called Wick. US based."},
   {id:3,  flag:"🇺🇸", name:"Wick",                           tag:"WICK",       votes:939,  desc:"People compare them to MF but they are not even close. Wick tried to be the \"mature\" ones but they almost never win. Punisher thinks he is tough, lol. US based."},
   {id:4,  flag:"🇺🇸", name:"Berzerker",                      tag:"BERZ",       votes:300,  desc:"A clan led by a YouTuber whose channel survives on giveaways. Almost never wins. Vote for this if you're chasing a freebie. US based."},
-  {id:5,  flag:"🌎",  name:"HEAT & NEXT & Latin Clans",      tag:"LATAM",      votes:10,   desc:"Grouped them all. NEXT is only known because of JunkMale farming views off hacker content. HEAT is useless. Other Latin clans? Also not doing much. Mexico based."},
-  {id:6,  flag:"🇺🇸", name:"Overdrive",                      tag:"OVD",        votes:3,    desc:"A retired iOS members clan that recently tried to make a comeback. Huge egos, little to show. US based."},
+  {id:5,  flag:"🌎",  name:"HEAT & NEXT & Latin Clans",      tag:"LATAM",      votes:489,   desc:"Grouped them all. NEXT is only known because of JunkMale farming views off hacker content. HEAT is useless. Other Latin clans? Also not doing much. Mexico based."},
+  {id:6,  flag:"🇺🇸", name:"Overdrive",                      tag:"OVD",        votes:960,    desc:"A retired iOS members clan that recently tried to make a comeback. Huge egos, little to show. US based."},
   {id:7,  flag:"🇺🇸", name:"Zen Warriors",                   tag:"ZΞЛ",        votes:830,  desc:"Thought they were the peacekeepers. RΞЛ made them go extinct. US based."},
   {id:8,  flag:"🇷🇺", name:"Iron Stars",                     tag:"☆",          votes:1357, desc:"Have an insane history, currently one of the strongest clans on the board. Russia based."},
-  {id:9,  flag:"🇨🇳", name:"All Chinese Clans",              tag:"CN-ALL",     votes:1293,  desc:"Most probably won't see this. There used to be hacker clans like Habibi and Nebula etc. Now most don't play or are very weak. China Based."},
-  {id:10, flag:"🇲🇽", name:"Legion",                         tag:"INTI",       votes:13,   desc:"Best Latin America clan, the strongest in the region. Mexico Based."},
+  {id:9,  flag:"🇨🇳", name:"All Chinese Clans",              tag:"CN-ALL",     votes:1485,  desc:"Most probably won't see this. There used to be hacker clans like Habibi and Nebula etc. Now most don't play or are very weak. China Based."},
+  {id:10, flag:"🇲🇽", name:"Legion",                         tag:"INTI",       votes:697,   desc:"Best Latin America clan, the strongest in the region. Mexico Based."},
   {id:11, flag:"🇺🇸", name:"Universal Pro",                  tag:"UN",         votes:868,  desc:"A clan that was decent for a stretch but luck ran out. Now a weak shell — most members left and the leader is an odd character. US based."},
   {id:12, flag:"🇬🇧", name:"HOWl",                           tag:"HOWL",       votes:135,  desc:"The leader is a kid from UK who loves abusing what little power he has. Threatened prime RΞЛ and got raided 19 times — most raids pulling over 1k pings. UK based."},
   {id:13, flag:"🇺🇸", name:"DD",                             tag:"DD",         votes:190,  desc:"A clan that plays but rarely wins. Nobody is losing sleep over them. US based."},
@@ -380,12 +368,11 @@ const CLAN_META = [
   {id:16, flag:"🇷🇺", name:"All Russian Clans",              tag:"RU/999",     votes:905,  desc:"Used to be formidable. Now largely inactive and outclassed. Russia Based."},
   {id:17, flag:"🇮🇹", name:"ITA",                            tag:"ITA",        votes:107,  desc:"Plays a lot and loses a lot. Italy based."},
   {id:18, flag:"🇪🇺", name:"STF",                            tag:"STF",        votes:590,  desc:"Hack users with close ties to Tanker Warning. EU based."},
-  {id:19, flag:"🇺🇸", name:"GANG",                           tag:"GANG",       votes:5,    desc:"Good friends, nice people. Not very active. US based."},
+  {id:19, flag:"🇺🇸", name:"GANG",                           tag:"GANG",       votes:597,    desc:"Good friends, nice people. Not very active. US based."},
   {id:20, flag:"🇲🇽", name:"UCH & FALLS",                    tag:"UCH/FALLS",  votes:289,  desc:"Falls members use hacks. Neither clan is particularly strong — if Falls dropped the cheats they'd be average at best. Mexico based."},
 ];
 
-
-let clans = CLAN_META.map(m => ({...m, votes: 0}));
+let clans = CLAN_META.map(m => ({...m})); // votes from CLAN_META used as seed until DB loads
 let sortMode = 'votes';
 let onlineCount = 0;
 let userFingerprint = '';
@@ -480,7 +467,6 @@ function initBackground() {
   } catch(e) { console.warn('Three.js background skipped:', e); }
 }
 
-
 function initFire() {
   const fc = document.getElementById('fire-canvas');
   if (!fc) return;
@@ -549,8 +535,6 @@ function initFire() {
   }
   loop();
 }
-
-
 async function loadVotes() {
   try {
     const { data, error } = await sb.from('clans').select('id, votes');
@@ -563,14 +547,10 @@ async function loadVotes() {
     }
     setDbStatus('live', 'LIVE');
     dbReady = true;
-    renderClans();
-    renderLeaderboard();
   } catch(e) {
     console.error('loadVotes error:', e);
     setDbStatus('err', 'DB ERR');
-    // Still render with seed data
-    renderClans();
-    renderLeaderboard();
+    dbReady = true; // still proceed with seed data
   }
 }
 
@@ -763,7 +743,6 @@ async function castVote(id, btn) {
     }, 2000);
   }
 }
-
 function renderLeaderboard() {
   const sorted = [...clans].sort((a,b) => b.votes - a.votes);
   const total = clans.reduce((s,c) => s+c.votes, 0);
@@ -807,6 +786,7 @@ function toast(msg) {
   wrap.appendChild(d);
   setTimeout(() => { d.style.opacity = '0'; d.style.transition = 'opacity .3s'; setTimeout(() => d.remove(), 350); }, 2500);
 }
+
 function showPage(name, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -815,6 +795,7 @@ function showPage(name, btn) {
   if (btn) btn.classList.add('active');
   if (name === 'leaderboard') renderLeaderboard();
 }
+
 
 function tickOnline() {
   onlineCount = Math.max(180, Math.min(420, onlineCount + (Math.random()<.5?1:-1)*Math.floor(Math.random()*4)));
@@ -825,6 +806,7 @@ function tickOnline() {
 }
 onlineCount = 230 + Math.floor(Math.random() * 80);
 setInterval(tickOnline, 3000);
+
 
 const LOGS = [
   'Establishing encrypted tunnel... OK',
@@ -837,16 +819,22 @@ const LOGS = [
 ];
 
 let logIdx = 0;
+
+function revealApp() {
+  // Only reveal once DB data is loaded
+  if (!dbReady) { setTimeout(revealApp, 200); return; }
+  const l = document.getElementById('loading');
+  if (l) { l.style.opacity = '0'; setTimeout(() => { l.style.display = 'none'; }, 520); }
+  const app = document.getElementById('app');
+  if (app) app.style.display = 'flex';
+  renderClans();
+  renderLeaderboard();
+  subscribeRealtime();
+}
+
 function nextLog() {
   if (logIdx >= LOGS.length) {
-    setTimeout(() => {
-      const l = document.getElementById('loading');
-      if (l) { l.style.opacity = '0'; setTimeout(() => { l.style.display = 'none'; }, 520); }
-      const app = document.getElementById('app');
-      if (app) app.style.display = 'flex';
-      // Kick off DB + realtime
-      loadVotes().then(() => subscribeRealtime());
-    }, 300);
+    setTimeout(revealApp, 300);
     return;
   }
   const d = document.createElement('div');
@@ -859,6 +847,7 @@ function nextLog() {
 document.addEventListener('DOMContentLoaded', () => {
   initBackground();
   initFire();
+  loadVotes(); // fetch DB in parallel with loading animation
   setTimeout(nextLog, 700);
 });
 
